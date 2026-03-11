@@ -119,6 +119,9 @@ docker compose exec postgres psql -U finvest
 - bcrypt 5.0+（密码哈希）
 - slowapi 0.1+（API 限流）
 - httpx 0.28+（OAuth HTTP 客户端）
+- akshare 1.18+（A股/港股/基金/债券数据）
+- yfinance 1.2+（美股数据）
+- pandas 3.0+（数据处理）
 
 ---
 
@@ -165,6 +168,7 @@ docker compose exec postgres psql -U finvest
 | 2026-03-11 | S1.3: Redis Stream 消息总线、Prometheus + Grafana 监控、Sentry 集成 | Redis, Prometheus, Grafana, Sentry |
 | 2026-03-11 | S1.4: 用户系统 — JWT 鉴权、邮箱注册/登录、OAuth(GitHub/Google)、API 限流 | 后端, 数据库 |
 | 2026-03-11 | Alembic 迁移 002: users 表新增 oauth_provider/oauth_id 字段 | 数据库 |
+| 2026-03-12 | S1.5: 行情数据采集服务 — A股/美股/港股/基金/债券数据采集、标准化、TimescaleDB 写入 | 后端 |
 
 ---
 

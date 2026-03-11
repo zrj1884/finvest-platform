@@ -56,13 +56,13 @@
 
 #### S1.5 行情数据接入
 
-- [ ] 集成 AKShare 获取 A股实时/历史行情
-- [ ] 集成 yfinance / Alpaca 获取美股行情
-- [ ] 集成 AKShare 港股模块 / 富途 OpenAPI 获取港股行情
-- [ ] 实现行情数据标准化（统一字段命名、时区处理）
-- [ ] 行情数据写入 TimescaleDB，建立连续聚合视图
-- [ ] 实现基金净值数据采集（AKShare）
-- [ ] 实现债券数据采集（AKShare 债券模块）
+- [x] 集成 AKShare 获取 A股实时/历史行情
+- [x] 集成 yfinance / Alpaca 获取美股行情
+- [x] 集成 AKShare 港股模块 / 富途 OpenAPI 获取港股行情
+- [x] 实现行情数据标准化（统一字段命名、时区处理）
+- [x] 行情数据写入 TimescaleDB，建立连续聚合视图
+- [x] 实现基金净值数据采集（AKShare）
+- [x] 实现债券数据采集（AKShare 债券模块）
 
 #### S1.6 资讯与舆情采集
 
