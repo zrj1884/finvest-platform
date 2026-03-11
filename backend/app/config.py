@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "FinVest Platform API"
 
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/finvest"
+    DATABASE_URL: str = "postgresql+asyncpg://finvest:finvest@localhost:5432/finvest"
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"

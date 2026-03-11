@@ -19,6 +19,7 @@ redis = "^5.2.0"
 httpx = "^0.28.0"
 python-jose = {version = "^3.3.0", extras = ["cryptography"]}
 passlib = {version = "^1.7.4", extras = ["bcrypt"]}
+greenlet = "^3.3.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.0"
