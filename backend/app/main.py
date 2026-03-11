@@ -1,11 +1,16 @@
 """FinVest Platform API - Main application."""
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 import sentry_sdk
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from app.api.v1.router import v1_router
 from app.config import settings
@@ -22,7 +27,7 @@ if settings.SENTRY_DSN:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Startup
     redis = await get_redis()
     await redis.ping()
@@ -45,6 +50,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Rate limiting (disabled when TESTING=true)
+limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"], enabled=not settings.TESTING)
+app.state.limiter = limiter
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    return JSONResponse(status_code=429, content={"detail": "Too many requests"})
+
 
 # Prometheus metrics (exposes /metrics endpoint)
 Instrumentator().instrument(app).expose(app, include_in_schema=False)

@@ -30,27 +30,27 @@
 
 #### S1.2 数据库设计与部署
 
-- [ ] 设计核心数据模型（用户、账户、持仓、交易、行情）
-- [ ] Docker Compose 部署 PostgreSQL + TimescaleDB
-- [ ] Docker Compose 部署 Redis 缓存层
-- [ ] 编写数据库迁移脚本（Alembic）
-- [ ] 设计时序数据分区策略（按日/月分区）
+- [x] 设计核心数据模型（用户、账户、持仓、交易、行情）
+- [x] Docker Compose 部署 PostgreSQL + TimescaleDB
+- [x] Docker Compose 部署 Redis 缓存层
+- [x] 编写数据库迁移脚本（Alembic）
+- [x] 设计时序数据分区策略（按日/月分区）
 
 ### Sprint 3-4（第 3-4 周）：基础中间件与用户系统
 
 #### S1.3 轻量中间件
 
-- [ ] 用 Redis Stream 替代 Kafka（初期轻量，降低运维复杂度）
-- [ ] 实现基础消息生产/消费框架
-- [ ] 配置 Prometheus + Grafana 监控（Docker 部署）
-- [ ] 接入 Sentry 错误追踪（自建免费版）
+- [x] 用 Redis Stream 替代 Kafka（初期轻量，降低运维复杂度）
+- [x] 实现基础消息生产/消费框架
+- [x] 配置 Prometheus + Grafana 监控（Docker 部署）
+- [x] 接入 Sentry 错误追踪（自建免费版）
 
 #### S1.4 用户系统（MVP 版）
 
-- [ ] 注册/登录（邮箱 + OAuth GitHub/Google）
-- [ ] JWT 鉴权与刷新机制
-- [ ] 基础用户信息管理
-- [ ] API 限流中间件
+- [x] 注册/登录（邮箱 + OAuth GitHub/Google）
+- [x] JWT 鉴权与刷新机制
+- [x] 基础用户信息管理
+- [x] API 限流中间件
 
 ### Sprint 5-8（第 5-8 周）：数据采集管道
 

@@ -21,7 +21,7 @@ async def get_redis() -> aioredis.Redis:
     """Get the global Redis client."""
     global redis_client
     if redis_client is None:
-        redis_client = aioredis.from_url(
+        redis_client = aioredis.from_url(  # type: ignore[no-untyped-call]
             settings.REDIS_URL,
             decode_responses=True,
             max_connections=20,
@@ -73,7 +73,7 @@ class StreamBus:
             Message ID
         """
         r = await self._get_redis()
-        msg_id = await r.xadd(stream, {"data": json.dumps(data, default=str)}, maxlen=maxlen, approximate=True)
+        msg_id: str = await r.xadd(stream, {"data": json.dumps(data, default=str)}, maxlen=maxlen, approximate=True)
         return msg_id
 
     async def subscribe(
@@ -83,7 +83,7 @@ class StreamBus:
         consumer: str = "worker-1",
         batch_size: int = 10,
         block_ms: int = 5000,
-    ):
+    ) -> Any:
         """Subscribe to a stream using consumer groups.
 
         Creates the group if it doesn't exist. Yields messages one by one.
@@ -146,7 +146,8 @@ class StreamBus:
     async def stream_length(self, stream: str) -> int:
         """Get the number of messages in a stream."""
         r = await self._get_redis()
-        return await r.xlen(stream)
+        length: int = await r.xlen(stream)
+        return length
 
 
 async def _reconnect_delay() -> None:

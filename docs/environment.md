@@ -115,18 +115,22 @@ docker compose exec postgres psql -U finvest
 - SQLAlchemy 2.0+（需要 `greenlet` 用于 async + Alembic）
 - asyncpg 0.30+
 - Alembic 1.14+
+- python-jose[cryptography] 3.3+（JWT）
+- bcrypt 5.0+（密码哈希）
+- slowapi 0.1+（API 限流）
+- httpx 0.28+（OAuth HTTP 客户端）
 
 ---
 
 ## 数据库 Schema 状态
 
-**Alembic 迁移版本**: `001` (Initial schema)
+**Alembic 迁移版本**: `002` (Add user OAuth fields)
 
 ### 业务表
 
 | 表名 | 说明 | 主键 |
 |------|------|------|
-| users | 用户 | UUID |
+| users | 用户（支持邮箱注册 + OAuth） | UUID |
 | accounts | 交易账户（关联用户，支持 5 市场） | UUID |
 | positions | 持仓 | UUID |
 | orders | 订单（完整状态机） | UUID |
@@ -159,6 +163,8 @@ docker compose exec postgres psql -U finvest
 | 2026-03-11 | 运行 Alembic 迁移 001，创建全部表和 hypertable | 数据库 |
 | 2026-03-11 | 添加 greenlet 依赖，修复 Alembic async 迁移 | Python 依赖 |
 | 2026-03-11 | S1.3: Redis Stream 消息总线、Prometheus + Grafana 监控、Sentry 集成 | Redis, Prometheus, Grafana, Sentry |
+| 2026-03-11 | S1.4: 用户系统 — JWT 鉴权、邮箱注册/登录、OAuth(GitHub/Google)、API 限流 | 后端, 数据库 |
+| 2026-03-11 | Alembic 迁移 002: users 表新增 oauth_provider/oauth_id 字段 | 数据库 |
 
 ---
 

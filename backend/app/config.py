@@ -10,6 +10,7 @@ class Settings(BaseSettings):
 
     # Application
     DEBUG: bool = False
+    TESTING: bool = False
     APP_NAME: str = "FinVest Platform API"
 
     # Database
@@ -21,6 +22,14 @@ class Settings(BaseSettings):
     # Security
     SECRET_KEY: str = "change-me-in-production"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    # OAuth
+    GITHUB_CLIENT_ID: str = ""
+    GITHUB_CLIENT_SECRET: str = ""
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    OAUTH_REDIRECT_BASE: str = "http://localhost:8000"
 
     # Observability
     SENTRY_DSN: str = ""  # Leave empty to disable Sentry

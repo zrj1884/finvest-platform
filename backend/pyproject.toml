@@ -9,7 +9,7 @@ package-mode = false
 python = "^3.11"
 fastapi = "^0.115.0"
 uvicorn = {version = "^0.34.0", extras = ["standard"]}
-pydantic = "^2.10.0"
+pydantic = {extras = ["email"], version = "^2.12.5"}
 pydantic-settings = "^2.7.0"
 sqlalchemy = "^2.0.0"
 alembic = "^1.14.0"
@@ -17,10 +17,12 @@ asyncpg = "^0.30.0"
 redis = "^5.2.0"
 httpx = "^0.28.0"
 python-jose = {version = "^3.3.0", extras = ["cryptography"]}
-passlib = {version = "^1.7.4", extras = ["bcrypt"]}
 greenlet = "^3.3.2"
 prometheus-fastapi-instrumentator = "^7.1.0"
 sentry-sdk = {extras = ["fastapi"], version = "^2.54.0"}
+slowapi = "^0.1.9"
+python-multipart = "^0.0.22"
+bcrypt = "^5.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.0"
