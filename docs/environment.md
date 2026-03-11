@@ -172,6 +172,7 @@ docker compose exec postgres psql -U finvest
 | 2026-03-12 | S1.5: 行情数据采集服务 — A股/美股/港股/基金/债券数据采集、标准化、TimescaleDB 写入 | 后端 |
 | 2026-03-12 | S1.6: 资讯与舆情采集 — 新浪财经/东方财富/雪球爬虫、宏观数据、APScheduler 定时调度 | 后端 |
 | 2026-03-12 | S1.7: 数据 API 层 — 行情/基金/债券/新闻查询 REST API、K线接口、Redis 缓存 | 后端 |
+| 2026-03-12 | S1.8: 基础 Web 看板 — Dashboard、行情表格、ECharts K线图、新闻流、响应式布局 | 前端 |
 
 ---
 
