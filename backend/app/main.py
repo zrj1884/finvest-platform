@@ -16,6 +16,7 @@ from app.api.v1.router import v1_router
 from app.config import settings
 from app.core.redis import close_redis, get_redis
 from app.db.session import engine
+from app.services.scheduler import setup_scheduler
 
 # Initialize Sentry (no-op if DSN is empty)
 if settings.SENTRY_DSN:
@@ -31,8 +32,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Startup
     redis = await get_redis()
     await redis.ping()
+
+    # Start scheduler (disabled in test mode)
+    sched = setup_scheduler()
+    if not settings.TESTING:
+        sched.start()
+
     yield
+
     # Shutdown
+    if sched.running:
+        sched.shutdown(wait=False)
     await close_redis()
     await engine.dispose()
 
