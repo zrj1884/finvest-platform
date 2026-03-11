@@ -50,6 +50,27 @@ async def _collect_us_stock_daily() -> None:
         logger.info("Scheduled US stock collection: %s", results)
 
 
+async def _compute_features() -> None:
+    """Scheduled job: compute technical + fundamental features for tracked stocks."""
+    from app.services.feature_engine.engine import FeatureEngine
+
+    engine = FeatureEngine()
+    symbols: list[tuple[str, str]] = [
+        # A-share
+        ("000001", "a_share"), ("600519", "a_share"), ("000858", "a_share"),
+        ("601318", "a_share"), ("600036", "a_share"),
+        # US stock
+        ("AAPL", "us_stock"), ("MSFT", "us_stock"), ("GOOGL", "us_stock"),
+        ("AMZN", "us_stock"), ("TSLA", "us_stock"),
+        # HK stock
+        ("00700", "hk_stock"), ("09988", "hk_stock"), ("01810", "hk_stock"),
+    ]
+    async with async_session_factory() as db:
+        results = await engine.compute_batch(db, symbols, store_days=1)
+        total = sum(results.values())
+        logger.info("Scheduled feature computation: %d rows for %d symbols", total, len(results))
+
+
 def setup_scheduler() -> AsyncIOScheduler:
     """Configure and return the scheduler with all jobs.
 
@@ -79,6 +100,15 @@ def setup_scheduler() -> AsyncIOScheduler:
         trigger=CronTrigger(day_of_week="mon-fri", hour=17, minute=0, timezone="America/New_York"),
         id="collect_us_stock_daily",
         name="Collect US stock daily data",
+        replace_existing=True,
+    )
+
+    # Feature computation: Mon-Fri at 18:00 CST (after all market data collected)
+    scheduler.add_job(
+        _compute_features,
+        trigger=CronTrigger(day_of_week="mon-fri", hour=18, minute=0, timezone="Asia/Shanghai"),
+        id="compute_features",
+        name="Compute stock features",
         replace_existing=True,
     )
 

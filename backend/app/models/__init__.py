@@ -6,6 +6,7 @@ from app.models.account import Account, Market
 from app.models.position import Position
 from app.models.order import Order, OrderSide, OrderStatus, OrderType
 from app.models.market_data import BondDaily, FundNav, NewsArticle, StockDaily
+from app.models.feature import StockFeature
 
 __all__ = [
     "Base",
@@ -21,4 +22,5 @@ __all__ = [
     "FundNav",
     "BondDaily",
     "NewsArticle",
+    "StockFeature",
 ]
