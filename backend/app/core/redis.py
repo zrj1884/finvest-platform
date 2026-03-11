@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from typing import Any
@@ -150,7 +151,6 @@ class StreamBus:
 
 async def _reconnect_delay() -> None:
     """Wait before reconnecting."""
-    import asyncio
     await asyncio.sleep(2)
 
 

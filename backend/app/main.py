@@ -10,6 +10,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from app.api.v1.router import v1_router
 from app.config import settings
 from app.core.redis import close_redis, get_redis
+from app.db.session import engine
 
 # Initialize Sentry (no-op if DSN is empty)
 if settings.SENTRY_DSN:
@@ -23,10 +24,12 @@ if settings.SENTRY_DSN:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    await get_redis()
+    redis = await get_redis()
+    await redis.ping()
     yield
     # Shutdown
     await close_redis()
+    await engine.dispose()
 
 
 app = FastAPI(

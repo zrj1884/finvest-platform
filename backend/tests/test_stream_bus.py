@@ -1,15 +1,39 @@
 """Tests for Redis Stream message bus."""
 
+import os
+
 import pytest
 import redis.asyncio as aioredis
 
 from app.core.redis import StreamBus
 
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/1")
+
+
+async def _redis_available() -> bool:
+    try:
+        client = aioredis.from_url(REDIS_URL, decode_responses=True)
+        await client.ping()
+        await client.aclose()
+        return True
+    except Exception:
+        return False
+
+
+pytestmark = pytest.mark.skipif(
+    os.getenv("CI") == "true" and not os.getenv("REDIS_URL"),
+    reason="Redis not available in CI without explicit REDIS_URL",
+)
+
 
 @pytest.fixture
 async def redis_client():
     """Create a test Redis client."""
-    client = aioredis.from_url("redis://localhost:6379/1", decode_responses=True)
+    client = aioredis.from_url(REDIS_URL, decode_responses=True)
+    try:
+        await client.ping()
+    except Exception:
+        pytest.skip("Redis not available")
     yield client
     # Cleanup test streams
     keys = [k async for k in client.scan_iter("test:*")]
@@ -19,7 +43,7 @@ async def redis_client():
 
 
 @pytest.fixture
-def bus(redis_client):
+async def bus(redis_client):
     return StreamBus(redis=redis_client)
 
 
@@ -45,11 +69,9 @@ async def test_stream_length(bus):
 
 
 async def test_subscribe_reads_messages(bus, redis_client):
-    # Publish messages first
     await bus.publish("test:sub", {"msg": "hello"})
     await bus.publish("test:sub", {"msg": "world"})
 
-    # Subscribe and read
     messages = []
     async for msg in bus.subscribe("test:sub", group="test-group", batch_size=10, block_ms=500):
         messages.append(msg["data"])
