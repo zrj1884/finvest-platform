@@ -1,11 +1,38 @@
+"""FinVest Platform API - Main application."""
+
+from contextlib import asynccontextmanager
+
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.api.v1.router import v1_router
+from app.config import settings
+from app.core.redis import close_redis, get_redis
+
+# Initialize Sentry (no-op if DSN is empty)
+if settings.SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        traces_sample_rate=0.1,
+        environment="development" if settings.DEBUG else "production",
+    )
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    await get_redis()
+    yield
+    # Shutdown
+    await close_redis()
+
 
 app = FastAPI(
     title="FinVest Platform API",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -15,6 +42,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Prometheus metrics (exposes /metrics endpoint)
+Instrumentator().instrument(app).expose(app, include_in_schema=False)
 
 app.include_router(v1_router, prefix="/api/v1")
 

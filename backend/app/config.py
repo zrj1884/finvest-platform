@@ -22,5 +22,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "change-me-in-production"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
+    # Observability
+    SENTRY_DSN: str = ""  # Leave empty to disable Sentry
+
 
 settings = Settings()

@@ -57,6 +57,8 @@ colima start --cpu 4 --memory 8 --disk 60
 |------|------|------|--------|
 | PostgreSQL + TimescaleDB | `timescale/timescaledb:latest-pg16` | 5432 | finvest-postgres |
 | Redis | `redis:7-alpine` | 6379 | finvest-redis |
+| Prometheus | `prom/prometheus:latest` | 9090 | finvest-prometheus |
+| Grafana | `grafana/grafana:latest` | 3001 | finvest-grafana |
 
 ### 数据库版本
 
@@ -76,6 +78,9 @@ colima start --cpu 4 --memory 8 --disk 60
 | API 文档 (Swagger) | `http://localhost:8000/docs` | - | - | 自动生成 |
 | API 文档 (ReDoc) | `http://localhost:8000/redoc` | - | - | 自动生成 |
 | Health Check | `http://localhost:8000/health` | - | - | 返回 `{"status": "ok"}` |
+| Prometheus Metrics | `http://localhost:8000/metrics` | - | - | FastAPI 自动暴露 |
+| Prometheus UI | `http://localhost:9090` | - | - | 指标查询与图表 |
+| Grafana | `http://localhost:3001` | `admin` | `finvest` | 监控仪表盘 |
 | 前端 (Vite dev) | `http://localhost:5173` | - | - | `npm run dev` |
 | 前端 (Docker) | `http://localhost:3000` | - | - | Nginx 容器 |
 | GitHub 仓库 | `https://github.com/zrj1884/finvest-platform` | `zrj1884` | PAT token | `gh auth login --with-token` |
@@ -153,6 +158,7 @@ docker compose exec postgres psql -U finvest
 | 2026-03-11 | 启动 PostgreSQL + TimescaleDB + Redis 容器 | postgres, redis |
 | 2026-03-11 | 运行 Alembic 迁移 001，创建全部表和 hypertable | 数据库 |
 | 2026-03-11 | 添加 greenlet 依赖，修复 Alembic async 迁移 | Python 依赖 |
+| 2026-03-11 | S1.3: Redis Stream 消息总线、Prometheus + Grafana 监控、Sentry 集成 | Redis, Prometheus, Grafana, Sentry |
 
 ---
 
@@ -160,7 +166,7 @@ docker compose exec postgres psql -U finvest
 
 ```bash
 # 启动/停止容器
-docker compose up -d postgres redis
+docker compose up -d postgres redis prometheus grafana
 docker compose down
 
 # 启动/停止 Colima
