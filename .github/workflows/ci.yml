@@ -69,11 +69,17 @@ jobs:
       - name: Type check with mypy
         run: poetry run mypy app/ --ignore-missing-imports
 
+      - name: Run database migrations
+        env:
+          DATABASE_URL: postgresql+asyncpg://finvest:finvest@localhost:5432/finvest_test
+        run: poetry run alembic upgrade head
+
       - name: Run tests
         env:
           DATABASE_URL: postgresql+asyncpg://finvest:finvest@localhost:5432/finvest_test
           REDIS_URL: redis://localhost:6379/0
           SECRET_KEY: test-secret-key
+          TESTING: "true"
         run: poetry run pytest tests/ -v
 
   frontend:
