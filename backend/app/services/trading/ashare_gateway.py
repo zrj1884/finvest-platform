@@ -94,7 +94,7 @@ class EasyTraderAdapter(BrokerAdapter):
 
     async def connect(self, account_no: str, password: str) -> None:
         try:
-            import easytrader  # type: ignore[import-not-found]
+            import easytrader  # type: ignore[import-untyped]
         except ImportError:
             raise RuntimeError(
                 "easytrader is not installed. Install with: pip install easytrader\n"
@@ -133,7 +133,7 @@ class EasyTraderAdapter(BrokerAdapter):
         today_orders = self._client.today_entrusts
         for order in today_orders:
             if str(order.get("entrust_no")) == broker_order_id:
-                return order
+                return dict(order)
         return {}
 
     async def get_balance(self) -> Decimal:
@@ -145,7 +145,7 @@ class EasyTraderAdapter(BrokerAdapter):
     async def get_positions(self) -> list[dict[str, object]]:
         if self._client is None:
             raise RuntimeError("Broker not connected")
-        return self._client.position
+        return list(self._client.position)
 
 
 class AShareGateway(TradingGateway):
