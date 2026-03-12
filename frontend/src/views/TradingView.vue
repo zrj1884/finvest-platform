@@ -40,7 +40,7 @@ async function loadAccounts() {
       } else if (savedId && ids.has(savedId)) {
         selectedAccountId.value = savedId
       } else {
-        selectedAccountId.value = accounts.value[0].id
+        selectedAccountId.value = accounts.value[0]!.id
       }
     }
   } catch {
