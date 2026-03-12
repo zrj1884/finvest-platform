@@ -1,7 +1,6 @@
 """Tests for pre-trade risk checks."""
 
 import uuid
-from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -72,11 +71,9 @@ class TestDailyLoss:
     @pytest.mark.asyncio
     async def test_no_loss(self) -> None:
         db = AsyncMock()
-        # daily_commission = 0, sell_orders = [], unrealized = 0, total_positions = 0
-        sell_result = MagicMock()
-        sell_result.scalars.return_value.all.return_value = []
+        # daily_commission = 0, unrealized = 0, total_positions = 0
         db.execute = AsyncMock(
-            side_effect=[_scalar_one(0), sell_result, _scalar_one(0), _scalar_one(0)]
+            side_effect=[_scalar_one(0), _scalar_one(0), _scalar_one(0)]
         )
         acct = _make_account(1_000_000)
 
@@ -86,11 +83,9 @@ class TestDailyLoss:
     @pytest.mark.asyncio
     async def test_within_limit(self) -> None:
         db = AsyncMock()
-        # daily_commission = 100, no sell orders, unrealized = -30000 (3%), total_positions = 500000
-        sell_result = MagicMock()
-        sell_result.scalars.return_value.all.return_value = []
+        # daily_commission = 100, unrealized = -30000 (3%), total_positions = 500000
         db.execute = AsyncMock(
-            side_effect=[_scalar_one(100), sell_result, _scalar_one(-30000), _scalar_one(500000)]
+            side_effect=[_scalar_one(100), _scalar_one(-30000), _scalar_one(500000)]
         )
         acct = _make_account(1_000_000)
 
@@ -101,11 +96,9 @@ class TestDailyLoss:
     @pytest.mark.asyncio
     async def test_exceeds_limit(self) -> None:
         db = AsyncMock()
-        # unrealized = -100000, total_positions = 500000
-        sell_result = MagicMock()
-        sell_result.scalars.return_value.all.return_value = []
+        # daily_commission = 0, unrealized = -100000, total_positions = 500000
         db.execute = AsyncMock(
-            side_effect=[_scalar_one(0), sell_result, _scalar_one(-100000), _scalar_one(500000)]
+            side_effect=[_scalar_one(0), _scalar_one(-100000), _scalar_one(500000)]
         )
         acct = _make_account(1_000_000)
 

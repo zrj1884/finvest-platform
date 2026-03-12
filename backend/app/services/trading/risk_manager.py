@@ -123,24 +123,8 @@ async def _check_daily_loss(
     )
     _daily_commission = Decimal(str(result.scalar_one()))
 
-    # Get today's sell orders to calculate realized loss
-    result = await db.execute(
-        select(Order).where(
-            Order.account_id == account.id,
-            Order.side == OrderSide.SELL,
-            Order.status.in_([OrderStatus.FILLED, OrderStatus.PARTIAL_FILLED]),
-            Order.filled_at >= day_start,
-        )
-    )
-    sell_orders = result.scalars().all()
-
-    # Calculate daily realized P&L from sell orders
-    daily_realized_pnl = Decimal("0")
-    for order in sell_orders:
-        if order.filled_price and order.filled_quantity:
-            # We use position's realized_pnl which is more accurate,
-            # but as a quick check, sum commission losses
-            daily_realized_pnl -= Decimal(str(order.commission))
+    # Sum commissions paid today as part of realized losses
+    daily_realized_pnl = -_daily_commission
 
     # Also check unrealized losses on current positions
     result = await db.execute(
