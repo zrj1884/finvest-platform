@@ -187,6 +187,8 @@ docker compose exec postgres psql -U finvest
 | 2026-03-12 | S2.6: AI 前端集成 — 个股详情页 AI 报告、市场情绪仪表盘、导航更新 | 前端 |
 | 2026-03-12 | 本地全链路测试与修复 — 数据采集名称填充、K线排序/周月聚合、US Stock 时区、基金/债券详情页、新闻搜索 | 全栈 |
 | 2026-03-12 | Alembic 迁移 004: 新闻去重(删除重复 source+url 行)、collector 改为 delete+insert 防重复 | 后端, 数据库 |
+| 2026-03-12 | S3.1: 统一交易接口 — TradingGateway ABC、OrderState 状态机、MarketRules 引擎(US/A股)、CRUD 层 | 后端 |
+| 2026-03-12 | S3.2: 模拟交易系统 — SimulatedGateway、MatchingEngine(市价/限价)、Portfolio 管理、交易 API、前端交易页面 | 全栈 |
 
 ---
 

@@ -46,5 +46,14 @@ class Settings(BaseSettings):
     OPENAI_MODEL: str = "gpt-4o-mini"
     LLM_PROVIDER: str = "deepseek"  # deepseek / qwen / openai
 
+    # Trading
+    SIM_DEFAULT_BALANCE: float = 1_000_000.0  # 100万虚拟资金
+    SIM_SLIPPAGE_PCT: float = 0.001  # 0.1% market order slippage
+
+    # Alpaca (US stock real trading — paper by default)
+    ALPACA_API_KEY: str = ""
+    ALPACA_SECRET_KEY: str = ""
+    ALPACA_BASE_URL: str = "https://paper-api.alpaca.markets"
+
 
 settings = Settings()
