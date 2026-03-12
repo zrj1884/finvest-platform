@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import KlineChart from '../components/KlineChart.vue'
 import { getStockKline, getStockDaily, type KlineData, type StockDaily } from '../api/market'
+import { generateStockReport, type ReportResponse } from '../api/ai'
 
 const route = useRoute()
 const market = computed(() => route.params.market as string)
@@ -26,6 +27,20 @@ async function loadData() {
     // ignore
   } finally {
     loading.value = false
+  }
+}
+
+const aiReport = ref<ReportResponse | null>(null)
+const aiLoading = ref(false)
+
+async function generateReport() {
+  aiLoading.value = true
+  try {
+    aiReport.value = await generateStockReport(symbol.value, market.value)
+  } catch {
+    // ignore — likely no API key configured
+  } finally {
+    aiLoading.value = false
   }
 }
 
@@ -77,7 +92,7 @@ watch([market, symbol, period], loadData)
     </div>
 
     <!-- Data summary -->
-    <div v-if="latestData" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div v-if="latestData" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <p class="text-xs text-gray-500">Open</p>
         <p class="text-lg font-mono font-medium">{{ latestData.open.toFixed(2) }}</p>
@@ -93,6 +108,30 @@ watch([market, symbol, period], loadData)
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <p class="text-xs text-gray-500">Volume</p>
         <p class="text-lg font-mono font-medium">{{ latestData.volume.toLocaleString() }}</p>
+      </div>
+    </div>
+
+    <!-- AI Analysis section -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-gray-900">AI Analysis</h2>
+        <button
+          @click="generateReport"
+          :disabled="aiLoading"
+          class="bg-blue-600 text-white px-4 py-1.5 rounded-md text-sm hover:bg-blue-700 transition disabled:opacity-50"
+        >
+          {{ aiLoading ? 'Generating...' : 'Generate Report' }}
+        </button>
+      </div>
+      <div v-if="aiLoading" class="text-center py-8">
+        <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+        <p class="text-gray-500 mt-2 text-sm">Analyzing with AI...</p>
+      </div>
+      <div v-else-if="aiReport" class="prose max-w-none text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+        {{ aiReport.content_md }}
+      </div>
+      <div v-else class="text-center py-8 text-gray-400 text-sm">
+        Click "Generate Report" to get AI-powered analysis
       </div>
     </div>
   </div>
