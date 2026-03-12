@@ -50,6 +50,11 @@ class Settings(BaseSettings):
     SIM_DEFAULT_BALANCE: float = 1_000_000.0  # 100万虚拟资金
     SIM_SLIPPAGE_PCT: float = 0.001  # 0.1% market order slippage
 
+    # Risk control
+    RISK_MAX_CONCENTRATION: float = 0.30  # 30% single position limit
+    RISK_MAX_DAILY_LOSS_PCT: float = 0.05  # 5% daily loss limit
+    RISK_MAX_ORDERS_PER_MINUTE: int = 10
+
     # Alpaca (US stock real trading — paper by default)
     ALPACA_API_KEY: str = ""
     ALPACA_SECRET_KEY: str = ""

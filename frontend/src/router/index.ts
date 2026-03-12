@@ -59,6 +59,11 @@ const routes = [
         component: () => import('../views/TradingView.vue'),
       },
       {
+        path: 'portfolio',
+        name: 'Portfolio',
+        component: () => import('../views/PortfolioView.vue'),
+      },
+      {
         path: 'accounts',
         name: 'Accounts',
         component: () => import('../views/AccountsView.vue'),

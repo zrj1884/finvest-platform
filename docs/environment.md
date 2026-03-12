@@ -189,6 +189,9 @@ docker compose exec postgres psql -U finvest
 | 2026-03-12 | Alembic 迁移 004: 新闻去重(删除重复 source+url 行)、collector 改为 delete+insert 防重复 | 后端, 数据库 |
 | 2026-03-12 | S3.1: 统一交易接口 — TradingGateway ABC、OrderState 状态机、MarketRules 引擎(US/A股)、CRUD 层 | 后端 |
 | 2026-03-12 | S3.2: 模拟交易系统 — SimulatedGateway、MatchingEngine(市价/限价)、Portfolio 管理、交易 API、前端交易页面 | 全栈 |
+| 2026-03-12 | S3.5: 基础风控 — 持仓集中度(30%)、单日亏损(5%)、下单频率(10次/分钟)预交易检查 | 后端 |
+| 2026-03-12 | S3.6: 资产看板 — 总资产概览、市场配置饼图、持仓明细、资金流水、Portfolio API | 全栈 |
+| 2026-03-12 | Alembic 迁移 005: portfolio_snapshots hypertable（按月分区） | 数据库 |
 
 ---
 

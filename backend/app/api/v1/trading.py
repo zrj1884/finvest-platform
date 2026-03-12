@@ -18,6 +18,7 @@ from app.models.user import User
 from app.schemas.trading import OrderCreate, OrderRead
 from app.services.trading.gateway import get_gateway
 from app.services.trading.matching_engine import get_latest_price, get_rules
+from app.services.trading.risk_manager import pre_trade_check
 
 router = APIRouter(prefix="/trading", tags=["trading"])
 
@@ -72,6 +73,14 @@ async def place_order(
     )
     if errors:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="; ".join(errors))
+
+    # Pre-trade risk checks
+    order_price = body.price if body.price is not None else current_price
+    risk_errors = await pre_trade_check(
+        db, account, body.symbol, body.side, body.quantity, order_price
+    )
+    if risk_errors:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="; ".join(risk_errors))
 
     # Create order record
     order = await order_crud.create(
