@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from decimal import Decimal
 
-from app.models.order import Order, OrderSide, OrderType
+from app.models.order import OrderSide, OrderType
 
 
 class MarketRules(ABC):

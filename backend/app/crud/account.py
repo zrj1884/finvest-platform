@@ -42,7 +42,6 @@ async def update_balance(db: AsyncSession, account: Account, delta: Decimal) -> 
 async def reset(db: AsyncSession, account: Account, balance: Decimal) -> Account:
     """Reset a simulated account: clear positions/orders, restore balance."""
     # Positions and orders are cascade-deleted via relationship
-    from app.models.order import Order
     from app.models.position import Position
 
     await db.execute(
