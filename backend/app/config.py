@@ -34,5 +34,17 @@ class Settings(BaseSettings):
     # Observability
     SENTRY_DSN: str = ""  # Leave empty to disable Sentry
 
+    # LLM API
+    DEEPSEEK_API_KEY: str = ""
+    DEEPSEEK_BASE_URL: str = "https://api.deepseek.com"
+    DEEPSEEK_MODEL: str = "deepseek-chat"
+    QWEN_API_KEY: str = ""
+    QWEN_BASE_URL: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    QWEN_MODEL: str = "qwen-plus"
+    OPENAI_API_KEY: str = ""
+    OPENAI_BASE_URL: str = "https://api.openai.com/v1"
+    OPENAI_MODEL: str = "gpt-4o-mini"
+    LLM_PROVIDER: str = "deepseek"  # deepseek / qwen / openai
+
 
 settings = Settings()

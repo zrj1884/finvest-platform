@@ -11,6 +11,7 @@ const navItems = [
   { name: 'Fund', path: '/fund' },
   { name: 'Bond', path: '/bond' },
   { name: 'News', path: '/news' },
+  { name: 'AI Report', path: '/report' },
 ]
 </script>
 

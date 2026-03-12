@@ -71,6 +71,19 @@ async def _compute_features() -> None:
         logger.info("Scheduled feature computation: %d rows for %d symbols", total, len(results))
 
 
+async def _analyze_sentiment() -> None:
+    """Scheduled job: analyze sentiment for recent unscored news articles."""
+    from app.services.llm.sentiment import SentimentAnalyzer
+
+    analyzer = SentimentAnalyzer()
+    async with async_session_factory() as db:
+        try:
+            result = await analyzer.analyze_and_store(db, limit=20)
+            logger.info("Scheduled sentiment analysis: %s", result)
+        except Exception:
+            logger.error("Scheduled sentiment analysis failed", exc_info=True)
+
+
 def setup_scheduler() -> AsyncIOScheduler:
     """Configure and return the scheduler with all jobs.
 
@@ -109,6 +122,15 @@ def setup_scheduler() -> AsyncIOScheduler:
         trigger=CronTrigger(day_of_week="mon-fri", hour=18, minute=0, timezone="Asia/Shanghai"),
         id="compute_features",
         name="Compute stock features",
+        replace_existing=True,
+    )
+
+    # Sentiment analysis: every hour (only processes articles without scores)
+    scheduler.add_job(
+        _analyze_sentiment,
+        trigger=IntervalTrigger(hours=1),
+        id="analyze_sentiment",
+        name="Analyze news sentiment",
         replace_existing=True,
     )
 
