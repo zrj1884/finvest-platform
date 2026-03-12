@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
+import { setLocale } from '../i18n'
 
+const { t, locale } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
 const mobileMenuOpen = ref(false)
@@ -12,20 +15,25 @@ function handleLogout() {
   router.push('/login')
 }
 
+function toggleLocale() {
+  const next = locale.value === 'zh' ? 'en' : 'zh'
+  setLocale(next)
+}
+
 onMounted(() => auth.init())
 
 const navItems = [
-  { name: 'Dashboard', path: '/' },
-  { name: 'A-Share', path: '/market/a_share' },
-  { name: 'US Stock', path: '/market/us_stock' },
-  { name: 'HK Stock', path: '/market/hk_stock' },
-  { name: 'Fund', path: '/fund' },
-  { name: 'Bond', path: '/bond' },
-  { name: 'News', path: '/news' },
-  { name: 'AI Report', path: '/report' },
-  { name: 'Sentiment', path: '/sentiment' },
-  { name: 'Trading', path: '/trading' },
-  { name: 'Portfolio', path: '/portfolio' },
+  { key: 'nav.dashboard', path: '/' },
+  { key: 'nav.aShare', path: '/market/a_share' },
+  { key: 'nav.usStock', path: '/market/us_stock' },
+  { key: 'nav.hkStock', path: '/market/hk_stock' },
+  { key: 'nav.fund', path: '/fund' },
+  { key: 'nav.bond', path: '/bond' },
+  { key: 'nav.news', path: '/news' },
+  { key: 'nav.aiReport', path: '/report' },
+  { key: 'nav.sentiment', path: '/sentiment' },
+  { key: 'nav.trading', path: '/trading' },
+  { key: 'nav.portfolio', path: '/portfolio' },
 ]
 </script>
 
@@ -46,20 +54,27 @@ const navItems = [
                 class="px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition"
                 active-class="text-blue-600 bg-blue-50"
               >
-                {{ item.name }}
+                {{ t(item.key) }}
               </router-link>
             </div>
           </div>
-          <!-- Auth -->
+          <!-- Auth + Lang -->
           <div class="hidden md:flex items-center gap-3 ml-4">
+            <button
+              @click="toggleLocale"
+              class="text-sm text-gray-400 hover:text-blue-600 border border-gray-200 rounded px-1.5 py-0.5"
+              :title="locale === 'zh' ? 'Switch to English' : '切换中文'"
+            >
+              {{ locale === 'zh' ? 'EN' : '中' }}
+            </button>
             <template v-if="auth.isLoggedIn">
               <span class="text-sm text-gray-500">{{ auth.user?.nickname || auth.user?.email }}</span>
               <button
                 @click="handleLogout"
                 class="text-sm text-gray-500 hover:text-red-600"
-              >Logout</button>
+              >{{ t('nav.logout') }}</button>
             </template>
-            <router-link v-else to="/login" class="text-sm text-blue-600 hover:text-blue-800">Sign In</router-link>
+            <router-link v-else to="/login" class="text-sm text-blue-600 hover:text-blue-800">{{ t('nav.signIn') }}</router-link>
           </div>
           <!-- Mobile menu button -->
           <div class="flex items-center md:hidden">
@@ -98,8 +113,19 @@ const navItems = [
             active-class="text-blue-600 bg-blue-50"
             @click="mobileMenuOpen = false"
           >
-            {{ item.name }}
+            {{ t(item.key) }}
           </router-link>
+          <!-- Mobile: lang + auth -->
+          <div class="flex items-center gap-3 px-3 py-2 border-t border-gray-100 mt-2 pt-3">
+            <button @click="toggleLocale" class="text-sm text-gray-400 hover:text-blue-600 border border-gray-200 rounded px-1.5 py-0.5">
+              {{ locale === 'zh' ? 'EN' : '中' }}
+            </button>
+            <template v-if="auth.isLoggedIn">
+              <span class="text-sm text-gray-500">{{ auth.user?.nickname || auth.user?.email }}</span>
+              <button @click="handleLogout" class="text-sm text-gray-500 hover:text-red-600">{{ t('nav.logout') }}</button>
+            </template>
+            <router-link v-else to="/login" class="text-sm text-blue-600 hover:text-blue-800" @click="mobileMenuOpen = false">{{ t('nav.signIn') }}</router-link>
+          </div>
         </div>
       </div>
     </nav>

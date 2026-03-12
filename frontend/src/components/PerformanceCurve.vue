@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, shallowRef } from 'vue'
+import { useI18n } from 'vue-i18n'
 import * as echarts from 'echarts/core'
 import { LineChart } from 'echarts/charts'
 import {
@@ -11,6 +12,8 @@ import { CanvasRenderer } from 'echarts/renderers'
 import type { PerformancePoint } from '../api/portfolio'
 
 echarts.use([LineChart, GridComponent, TooltipComponent, DataZoomComponent, CanvasRenderer])
+
+const { t } = useI18n()
 
 const props = defineProps<{
   data: PerformancePoint[]
@@ -35,7 +38,7 @@ function render() {
       formatter: (params: Array<{ axisValue: string; value: number }>) => {
         const p = params[0]
         if (!p) return ''
-        return `${p.axisValue}<br/>Total: ¥${Number(p.value).toLocaleString()}`
+        return `${p.axisValue}<br/>${t('chart.total')}: ¥${Number(p.value).toLocaleString()}`
       },
     },
     grid: { left: 80, right: 20, top: 20, bottom: 50 },
@@ -49,7 +52,7 @@ function render() {
       min: Math.floor(minVal - padding),
       max: Math.ceil(maxVal + padding),
       axisLabel: {
-        formatter: (v: number) => `¥${(v / 10000).toFixed(0)}万`,
+        formatter: (v: number) => `¥${(v / 10000).toFixed(0)}`,
         fontSize: 11,
       },
     },

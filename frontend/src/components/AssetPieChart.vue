@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, shallowRef } from 'vue'
+import { useI18n } from 'vue-i18n'
 import * as echarts from 'echarts/core'
 import { PieChart } from 'echarts/charts'
 import { TooltipComponent, LegendComponent } from 'echarts/components'
@@ -8,13 +9,7 @@ import type { MarketAllocation } from '../api/portfolio'
 
 echarts.use([PieChart, TooltipComponent, LegendComponent, CanvasRenderer])
 
-const MARKET_LABELS: Record<string, string> = {
-  a_share: 'A股',
-  us_stock: '美股',
-  hk_stock: '港股',
-  fund: '基金',
-  bond: '债券',
-}
+const { t } = useI18n()
 
 const props = defineProps<{
   data: MarketAllocation[]
@@ -22,6 +17,10 @@ const props = defineProps<{
 
 const chartRef = ref<HTMLDivElement>()
 const chart = shallowRef<echarts.ECharts>()
+
+function marketLabel(market: string): string {
+  return t(`market.${market}`)
+}
 
 function render() {
   if (!chart.value || !props.data.length) return
@@ -32,7 +31,7 @@ function render() {
     },
     legend: {
       bottom: 0,
-      data: props.data.map((d) => MARKET_LABELS[d.market] || d.market),
+      data: props.data.map((d) => marketLabel(d.market)),
     },
     series: [
       {
@@ -42,7 +41,7 @@ function render() {
         itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
         label: { show: true, formatter: '{b}\n{d}%' },
         data: props.data.map((d) => ({
-          name: MARKET_LABELS[d.market] || d.market,
+          name: marketLabel(d.market),
           value: Number(d.total_value),
         })),
       },

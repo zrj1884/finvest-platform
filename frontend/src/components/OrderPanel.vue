@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { placeOrder, type OrderCreateRequest } from '../api/trading'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   accountId: string
@@ -26,11 +29,11 @@ async function submit() {
   error.value = ''
   success.value = ''
   if (!symbol.value.trim()) {
-    error.value = 'Symbol is required'
+    error.value = t('trading.symbolRequired')
     return
   }
   if (isLimit.value && !price.value) {
-    error.value = 'Price is required for limit orders'
+    error.value = t('trading.priceRequired')
     return
   }
 
@@ -50,7 +53,7 @@ async function submit() {
     success.value = `Order ${order.status}: ${order.side} ${order.filled_quantity || order.quantity} ${order.symbol}`
     emit('orderPlaced')
   } catch (e: any) {
-    error.value = e.response?.data?.detail || 'Failed to place order'
+    error.value = e.response?.data?.detail || t('trading.orderFailed')
   } finally {
     loading.value = false
   }
@@ -59,7 +62,7 @@ async function submit() {
 
 <template>
   <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-    <h3 class="text-sm font-bold text-gray-900 mb-3">Place Order</h3>
+    <h3 class="text-sm font-bold text-gray-900 mb-3">{{ t('trading.placeOrder') }}</h3>
 
     <!-- Side toggle -->
     <div class="flex gap-2 mb-3">
@@ -70,7 +73,7 @@ async function submit() {
           side === 'buy' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
         ]"
       >
-        Buy
+        {{ t('common.buy') }}
       </button>
       <button
         @click="side = 'sell'"
@@ -79,36 +82,36 @@ async function submit() {
           side === 'sell' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
         ]"
       >
-        Sell
+        {{ t('common.sell') }}
       </button>
     </div>
 
     <!-- Symbol -->
     <div class="mb-3">
-      <label class="block text-xs text-gray-500 mb-1">Symbol</label>
+      <label class="block text-xs text-gray-500 mb-1">{{ t('common.symbol') }}</label>
       <input
         v-model="symbol"
         type="text"
-        placeholder="e.g. 600519"
+        :placeholder="t('trading.symbolPlaceholder')"
         class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500"
       />
     </div>
 
     <!-- Order type -->
     <div class="mb-3">
-      <label class="block text-xs text-gray-500 mb-1">Type</label>
+      <label class="block text-xs text-gray-500 mb-1">{{ t('common.type') }}</label>
       <select
         v-model="orderType"
         class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500"
       >
-        <option value="market">Market</option>
-        <option value="limit">Limit</option>
+        <option value="market">{{ t('trading.marketOrder') }}</option>
+        <option value="limit">{{ t('trading.limitOrder') }}</option>
       </select>
     </div>
 
     <!-- Quantity -->
     <div class="mb-3">
-      <label class="block text-xs text-gray-500 mb-1">Quantity</label>
+      <label class="block text-xs text-gray-500 mb-1">{{ t('common.quantity') }}</label>
       <input
         v-model.number="quantity"
         type="number"
@@ -119,7 +122,7 @@ async function submit() {
 
     <!-- Price (limit only) -->
     <div v-if="isLimit" class="mb-3">
-      <label class="block text-xs text-gray-500 mb-1">Price</label>
+      <label class="block text-xs text-gray-500 mb-1">{{ t('common.price') }}</label>
       <input
         v-model.number="price"
         type="number"
@@ -144,7 +147,7 @@ async function submit() {
           : 'bg-green-600 text-white hover:bg-green-700',
       ]"
     >
-      {{ loading ? 'Submitting...' : side === 'buy' ? 'Buy' : 'Sell' }}
+      {{ loading ? t('trading.submitting') : side === 'buy' ? t('common.buy') : t('common.sell') }}
     </button>
   </div>
 </template>

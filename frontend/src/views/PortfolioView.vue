@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   getOverview,
   getAllocation,
@@ -15,6 +16,8 @@ import {
 import AssetPieChart from '../components/AssetPieChart.vue'
 import PerformanceCurve from '../components/PerformanceCurve.vue'
 import HoldingsTable from '../components/HoldingsTable.vue'
+
+const { t } = useI18n()
 
 const overview = ref<AssetOverview | null>(null)
 const allocation = ref<MarketAllocation[]>([])
@@ -56,17 +59,17 @@ onMounted(load)
 
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-gray-900 mb-4">Portfolio</h1>
+    <h1 class="text-2xl font-bold text-gray-900 mb-4">{{ t('portfolio.title') }}</h1>
 
-    <div v-if="loading" class="text-center py-12 text-gray-500">Loading...</div>
+    <div v-if="loading" class="text-center py-12 text-gray-500">{{ t('common.loading') }}</div>
 
     <div v-else-if="!overview || overview.account_count === 0" class="text-center py-12">
-      <p class="text-gray-500 mb-4">No trading accounts yet.</p>
+      <p class="text-gray-500 mb-4">{{ t('portfolio.noAccounts') }}</p>
       <router-link
         to="/accounts"
         class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition"
       >
-        Create Account
+        {{ t('portfolio.createAccount') }}
       </router-link>
     </div>
 
@@ -74,19 +77,19 @@ onMounted(load)
       <!-- Summary Cards -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div class="bg-white rounded-lg shadow p-4">
-          <div class="text-xs text-gray-500 mb-1">Total Assets</div>
+          <div class="text-xs text-gray-500 mb-1">{{ t('portfolio.totalAssets') }}</div>
           <div class="text-xl font-bold">¥{{ Number(overview.total_value).toLocaleString() }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
-          <div class="text-xs text-gray-500 mb-1">Cash Balance</div>
+          <div class="text-xs text-gray-500 mb-1">{{ t('portfolio.cashBalance') }}</div>
           <div class="text-xl font-bold">¥{{ Number(overview.total_balance).toLocaleString() }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
-          <div class="text-xs text-gray-500 mb-1">Market Value</div>
+          <div class="text-xs text-gray-500 mb-1">{{ t('portfolio.marketValue') }}</div>
           <div class="text-xl font-bold">¥{{ Number(overview.total_market_value).toLocaleString() }}</div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
-          <div class="text-xs text-gray-500 mb-1">Total P&L</div>
+          <div class="text-xs text-gray-500 mb-1">{{ t('portfolio.totalPnl') }}</div>
           <div class="text-xl font-bold" :class="pnlColor(Number(overview.total_pnl))">
             {{ Number(overview.total_pnl) >= 0 ? '+' : '' }}¥{{ Number(overview.total_pnl).toLocaleString() }}
             <span class="text-sm font-normal ml-1">
@@ -99,33 +102,33 @@ onMounted(load)
       <!-- P&L breakdown -->
       <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         <div class="bg-white rounded-lg shadow p-4">
-          <div class="text-xs text-gray-500 mb-1">Unrealized P&L</div>
+          <div class="text-xs text-gray-500 mb-1">{{ t('portfolio.unrealizedPnl') }}</div>
           <div class="text-lg font-semibold" :class="pnlColor(Number(overview.total_unrealized_pnl))">
             {{ Number(overview.total_unrealized_pnl) >= 0 ? '+' : '' }}¥{{ Number(overview.total_unrealized_pnl).toLocaleString() }}
           </div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
-          <div class="text-xs text-gray-500 mb-1">Realized P&L</div>
+          <div class="text-xs text-gray-500 mb-1">{{ t('portfolio.realizedPnl') }}</div>
           <div class="text-lg font-semibold" :class="pnlColor(Number(overview.total_realized_pnl))">
             {{ Number(overview.total_realized_pnl) >= 0 ? '+' : '' }}¥{{ Number(overview.total_realized_pnl).toLocaleString() }}
           </div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
-          <div class="text-xs text-gray-500 mb-1">Accounts</div>
+          <div class="text-xs text-gray-500 mb-1">{{ t('portfolio.accountCount') }}</div>
           <div class="text-lg font-semibold">{{ overview.account_count }}</div>
         </div>
       </div>
 
       <!-- Performance Curve -->
       <div v-if="performance.length > 0" class="bg-white rounded-lg shadow p-4 mb-6">
-        <h3 class="text-sm font-semibold text-gray-700 mb-2">Portfolio Performance</h3>
+        <h3 class="text-sm font-semibold text-gray-700 mb-2">{{ t('portfolio.performance') }}</h3>
         <PerformanceCurve :data="performance" />
       </div>
 
       <!-- Charts + Holdings -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         <div class="bg-white rounded-lg shadow p-4">
-          <h3 class="text-sm font-semibold text-gray-700 mb-2">Asset Allocation</h3>
+          <h3 class="text-sm font-semibold text-gray-700 mb-2">{{ t('portfolio.allocation') }}</h3>
           <AssetPieChart :data="allocation" />
         </div>
         <div class="lg:col-span-2">
@@ -136,22 +139,22 @@ onMounted(load)
       <!-- Cash Flows -->
       <div class="bg-white rounded-lg shadow overflow-hidden">
         <div class="px-4 py-3 border-b border-gray-200">
-          <h3 class="text-sm font-semibold text-gray-700">Recent Cash Flows</h3>
+          <h3 class="text-sm font-semibold text-gray-700">{{ t('portfolio.cashFlows') }}</h3>
         </div>
         <div v-if="cashFlows.length === 0" class="px-4 py-8 text-center text-gray-400 text-sm">
-          No transactions yet
+          {{ t('portfolio.noTransactions') }}
         </div>
         <div v-else class="overflow-x-auto">
           <table class="min-w-full text-sm">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Time</th>
-                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Account</th>
-                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Symbol</th>
-                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Side</th>
-                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Qty</th>
-                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Price</th>
-                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Amount</th>
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">{{ t('common.time') }}</th>
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">{{ t('common.account') }}</th>
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">{{ t('common.symbol') }}</th>
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">{{ t('common.side') }}</th>
+                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">{{ t('common.qty') }}</th>
+                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">{{ t('common.price') }}</th>
+                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">{{ t('common.amount') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -166,7 +169,7 @@ onMounted(load)
                     :class="cf.side === 'buy' ? 'text-red-600' : 'text-green-600'"
                     class="font-medium"
                   >
-                    {{ cf.side === 'buy' ? 'Buy' : 'Sell' }}
+                    {{ cf.side === 'buy' ? t('common.buy') : t('common.sell') }}
                   </span>
                 </td>
                 <td class="px-3 py-2 text-right">{{ cf.quantity.toLocaleString() }}</td>

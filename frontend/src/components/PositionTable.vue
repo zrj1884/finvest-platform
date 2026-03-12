@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { listPositions, type Position } from '../api/trading'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   accountId: string
@@ -35,23 +38,23 @@ defineExpose({ refresh: loadPositions })
 
 <template>
   <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-    <h3 class="text-sm font-bold text-gray-900 mb-3">Positions</h3>
+    <h3 class="text-sm font-bold text-gray-900 mb-3">{{ t('position.title') }}</h3>
 
-    <div v-if="loading" class="text-center py-4 text-gray-500 text-sm">Loading...</div>
-    <div v-else-if="positions.length === 0" class="text-center py-4 text-gray-400 text-sm">No positions</div>
+    <div v-if="loading" class="text-center py-4 text-gray-500 text-sm">{{ t('common.loading') }}</div>
+    <div v-else-if="positions.length === 0" class="text-center py-4 text-gray-400 text-sm">{{ t('position.noPositions') }}</div>
 
     <div v-else class="overflow-x-auto">
       <table class="w-full text-xs">
         <thead>
           <tr class="text-left text-gray-500 border-b">
-            <th class="pb-2 pr-2">Symbol</th>
-            <th class="pb-2 pr-2">Name</th>
-            <th class="pb-2 pr-2 text-right">Qty</th>
-            <th class="pb-2 pr-2 text-right">Avail</th>
-            <th class="pb-2 pr-2 text-right">Avg Cost</th>
-            <th class="pb-2 pr-2 text-right">Price</th>
-            <th class="pb-2 pr-2 text-right">Market Value</th>
-            <th class="pb-2 pr-2 text-right">P&L</th>
+            <th class="pb-2 pr-2">{{ t('common.symbol') }}</th>
+            <th class="pb-2 pr-2">{{ t('common.name') }}</th>
+            <th class="pb-2 pr-2 text-right">{{ t('common.qty') }}</th>
+            <th class="pb-2 pr-2 text-right">{{ t('position.avail') }}</th>
+            <th class="pb-2 pr-2 text-right">{{ t('position.avgCost') }}</th>
+            <th class="pb-2 pr-2 text-right">{{ t('common.price') }}</th>
+            <th class="pb-2 pr-2 text-right">{{ t('position.marketValue') }}</th>
+            <th class="pb-2 pr-2 text-right">{{ t('position.pnl') }}</th>
           </tr>
         </thead>
         <tbody>
