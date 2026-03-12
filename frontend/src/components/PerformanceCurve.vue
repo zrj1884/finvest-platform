@@ -34,6 +34,7 @@ function render() {
       trigger: 'axis',
       formatter: (params: Array<{ axisValue: string; value: number }>) => {
         const p = params[0]
+        if (!p) return ''
         return `${p.axisValue}<br/>Total: ¥${Number(p.value).toLocaleString()}`
       },
     },

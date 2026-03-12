@@ -13,6 +13,7 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from decimal import Decimal
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -89,7 +90,7 @@ class EasyTraderAdapter(BrokerAdapter):
 
     def __init__(self, broker: str = "ths") -> None:
         self._broker = broker
-        self._client: object = None
+        self._client: Any = None
 
     async def connect(self, account_no: str, password: str) -> None:
         try:
@@ -101,26 +102,26 @@ class EasyTraderAdapter(BrokerAdapter):
             )
 
         self._client = easytrader.use(self._broker)
-        self._client.connect(account_no)  # type: ignore[union-attr]
+        self._client.connect(account_no)
         logger.info("Connected to %s broker account %s", self._broker, account_no)
 
     async def buy(self, symbol: str, price: Decimal, quantity: int) -> str:
         if self._client is None:
             raise RuntimeError("Broker not connected")
-        result = self._client.buy(symbol, float(price), quantity)  # type: ignore[union-attr]
+        result = self._client.buy(symbol, float(price), quantity)
         return str(result.get("entrust_no", ""))
 
     async def sell(self, symbol: str, price: Decimal, quantity: int) -> str:
         if self._client is None:
             raise RuntimeError("Broker not connected")
-        result = self._client.sell(symbol, float(price), quantity)  # type: ignore[union-attr]
+        result = self._client.sell(symbol, float(price), quantity)
         return str(result.get("entrust_no", ""))
 
     async def cancel(self, broker_order_id: str) -> bool:
         if self._client is None:
             raise RuntimeError("Broker not connected")
         try:
-            self._client.cancel_entrust(broker_order_id)  # type: ignore[union-attr]
+            self._client.cancel_entrust(broker_order_id)
             return True
         except Exception:
             logger.exception("Failed to cancel order %s", broker_order_id)
@@ -129,22 +130,22 @@ class EasyTraderAdapter(BrokerAdapter):
     async def get_order_status(self, broker_order_id: str) -> dict[str, object]:
         if self._client is None:
             raise RuntimeError("Broker not connected")
-        today_orders = self._client.today_entrusts  # type: ignore[union-attr]
+        today_orders = self._client.today_entrusts
         for order in today_orders:
             if str(order.get("entrust_no")) == broker_order_id:
-                return order  # type: ignore[return-value]
+                return order
         return {}
 
     async def get_balance(self) -> Decimal:
         if self._client is None:
             raise RuntimeError("Broker not connected")
-        balance_info = self._client.balance  # type: ignore[union-attr]
+        balance_info = self._client.balance
         return Decimal(str(balance_info.get("可用金额", 0)))
 
     async def get_positions(self) -> list[dict[str, object]]:
         if self._client is None:
             raise RuntimeError("Broker not connected")
-        return self._client.position  # type: ignore[union-attr, return-value]
+        return self._client.position
 
 
 class AShareGateway(TradingGateway):
