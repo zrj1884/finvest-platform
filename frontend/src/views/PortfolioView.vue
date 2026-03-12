@@ -5,18 +5,22 @@ import {
   getAllocation,
   getHoldings,
   getCashFlows,
+  getPerformance,
   type AssetOverview,
   type MarketAllocation,
   type HoldingItem,
   type CashFlowItem,
+  type PerformancePoint,
 } from '../api/portfolio'
 import AssetPieChart from '../components/AssetPieChart.vue'
+import PerformanceCurve from '../components/PerformanceCurve.vue'
 import HoldingsTable from '../components/HoldingsTable.vue'
 
 const overview = ref<AssetOverview | null>(null)
 const allocation = ref<MarketAllocation[]>([])
 const holdings = ref<HoldingItem[]>([])
 const cashFlows = ref<CashFlowItem[]>([])
+const performance = ref<PerformancePoint[]>([])
 const loading = ref(false)
 
 function pnlColor(val: number): string {
@@ -28,16 +32,18 @@ function pnlColor(val: number): string {
 async function load() {
   loading.value = true
   try {
-    const [o, a, h, c] = await Promise.all([
+    const [o, a, h, c, p] = await Promise.all([
       getOverview(),
       getAllocation(),
       getHoldings(),
       getCashFlows(30),
+      getPerformance(90),
     ])
     overview.value = o
     allocation.value = a
     holdings.value = h
     cashFlows.value = c
+    performance.value = p
   } catch {
     // Silently handle — user may not be logged in
   } finally {
@@ -108,6 +114,12 @@ onMounted(load)
           <div class="text-xs text-gray-500 mb-1">Accounts</div>
           <div class="text-lg font-semibold">{{ overview.account_count }}</div>
         </div>
+      </div>
+
+      <!-- Performance Curve -->
+      <div v-if="performance.length > 0" class="bg-white rounded-lg shadow p-4 mb-6">
+        <h3 class="text-sm font-semibold text-gray-700 mb-2">Portfolio Performance</h3>
+        <PerformanceCurve :data="performance" />
       </div>
 
       <!-- Charts + Holdings -->

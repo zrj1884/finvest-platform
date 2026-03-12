@@ -13,8 +13,10 @@ from app.schemas.portfolio import (
     CashFlowItem,
     HoldingItem,
     MarketAllocation,
+    PerformancePoint,
 )
 from app.services.trading import asset_tracker
+from app.services.trading.snapshot import get_performance_curve
 
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
 
@@ -44,6 +46,16 @@ async def get_holdings(
 ) -> list[HoldingItem]:
     """Get all holdings across accounts."""
     return await asset_tracker.get_holdings(db, user.id)
+
+
+@router.get("/performance", response_model=list[PerformancePoint])
+async def get_performance(
+    days: int = Query(90, ge=7, le=365),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[PerformancePoint]:
+    """Get daily portfolio value curve."""
+    return await get_performance_curve(db, user.id, days=days)
 
 
 @router.get("/cash-flows", response_model=list[CashFlowItem])

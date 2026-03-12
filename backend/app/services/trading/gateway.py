@@ -15,6 +15,7 @@ class TradingGateway(ABC):
 
     Concrete implementations:
       - SimulatedGateway: in-process matching engine for paper trading
+      - AShareGateway: A-share real trading via broker adapter (easytrader etc.)
       - AlpacaGateway: real US-stock execution via Alpaca API (future)
     """
 
@@ -39,6 +40,12 @@ def get_gateway(*, is_simulated: bool, broker: str | None = None) -> TradingGate
         from app.services.trading.sim_gateway import SimulatedGateway
 
         return SimulatedGateway()
+
+    if broker == "easytrader" or broker == "ths":
+        from app.services.trading.ashare_gateway import AShareGateway, EasyTraderAdapter
+
+        adapter = EasyTraderAdapter(broker="ths")
+        return AShareGateway(adapter)
 
     if broker == "alpaca":
         raise NotImplementedError("Alpaca gateway not yet implemented")

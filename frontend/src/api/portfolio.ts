@@ -62,6 +62,18 @@ export async function getHoldings(): Promise<HoldingItem[]> {
   return resp.data
 }
 
+export interface PerformancePoint {
+  date: string
+  total_value: number
+}
+
+export async function getPerformance(days?: number): Promise<PerformancePoint[]> {
+  const resp = await api.get<PerformancePoint[]>('/v1/portfolio/performance', {
+    params: { days },
+  })
+  return resp.data
+}
+
 export async function getCashFlows(limit?: number): Promise<CashFlowItem[]> {
   const resp = await api.get<CashFlowItem[]>('/v1/portfolio/cash-flows', {
     params: { limit },

@@ -15,6 +15,7 @@ from app.services.trading.order_state import validate_transition
 from app.services.trading.portfolio import apply_fill
 from app.services.trading.rules.a_share import AShareRules
 from app.services.trading.rules.base import MarketRules
+from app.services.trading.rules.convertible_bond import ConvertibleBondRules
 from app.services.trading.rules.us_stock import USStockRules
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ _RULES: dict[str, MarketRules] = {
     Market.US_STOCK.value: USStockRules(),
     Market.HK_STOCK.value: USStockRules(),  # HK uses US-style rules for now
     Market.FUND.value: AShareRules(),  # Fund uses A-share-style rules
-    Market.BOND.value: AShareRules(),  # Bond uses A-share-style rules
+    Market.BOND.value: ConvertibleBondRules(),  # Convertible bond T+0 rules
 }
 
 

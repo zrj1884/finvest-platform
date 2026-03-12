@@ -192,6 +192,8 @@ docker compose exec postgres psql -U finvest
 | 2026-03-12 | S3.5: 基础风控 — 持仓集中度(30%)、单日亏损(5%)、下单频率(10次/分钟)预交易检查 | 后端 |
 | 2026-03-12 | S3.6: 资产看板 — 总资产概览、市场配置饼图、持仓明细、资金流水、Portfolio API | 全栈 |
 | 2026-03-12 | Alembic 迁移 005: portfolio_snapshots hypertable（按月分区） | 数据库 |
+| 2026-03-12 | S3.4: A股交易通道 — AShareGateway+BrokerAdapter(easytrader)、可转债T+0规则(ConvertibleBondRules) | 后端 |
+| 2026-03-12 | S3.6: 资产走势曲线 — PortfolioSnapshot 记录服务、Performance API、ECharts 折线图 | 全栈 |
 
 ---
 

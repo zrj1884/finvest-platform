@@ -2,8 +2,6 @@
 
 from decimal import Decimal
 
-import pytest
-
 from app.models.order import OrderSide, OrderType
 from app.services.trading.rules.a_share import AShareRules
 from app.services.trading.rules.us_stock import USStockRules
