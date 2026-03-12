@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import KlineChart from '../components/KlineChart.vue'
+import RelatedNews from '../components/RelatedNews.vue'
 import { getStockKline, getStockDaily, type KlineData, type StockDaily } from '../api/market'
 import { generateStockReport, type ReportResponse } from '../api/ai'
 
@@ -43,6 +44,8 @@ async function generateReport() {
     aiLoading.value = false
   }
 }
+
+const newsKeyword = computed(() => latestData.value?.name || symbol.value)
 
 onMounted(loadData)
 watch([market, symbol, period], loadData)
@@ -109,6 +112,11 @@ watch([market, symbol, period], loadData)
         <p class="text-xs text-gray-500">Volume</p>
         <p class="text-lg font-mono font-medium">{{ latestData.volume.toLocaleString() }}</p>
       </div>
+    </div>
+
+    <!-- Related News -->
+    <div class="mb-6">
+      <RelatedNews :keyword="newsKeyword" />
     </div>
 
     <!-- AI Analysis section -->

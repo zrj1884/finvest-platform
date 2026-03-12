@@ -33,7 +33,7 @@ class USStockCollector(BaseCollector):
             end_date: End date (inclusive)
         """
 
-        start_str = start_date.isoformat() if start_date else "1990-01-01"
+        start_str = start_date.isoformat() if start_date else "2021-01-01"
         end_str = end_date.isoformat() if end_date else date.today().isoformat()
 
         loop = asyncio.get_running_loop()
@@ -51,9 +51,23 @@ class USStockCollector(BaseCollector):
             logger.warning("No data returned for US stock %s", symbol)
             return pd.DataFrame()
 
-        return self._standardise(raw, symbol)
+        name = await self._fetch_name(symbol)
+        return self._standardise(raw, symbol, name)
 
-    def _standardise(self, df: pd.DataFrame, symbol: str) -> pd.DataFrame:
+    async def _fetch_name(self, symbol: str) -> str | None:
+        """Fetch US stock name via yfinance."""
+        try:
+            import yfinance as yf
+
+            loop = asyncio.get_running_loop()
+            ticker = yf.Ticker(symbol)
+            info: dict[str, object] = await loop.run_in_executor(None, lambda: ticker.info)
+            return str(info.get("shortName") or info.get("longName") or symbol)
+        except Exception:
+            logger.debug("Could not fetch name for US stock %s", symbol)
+        return None
+
+    def _standardise(self, df: pd.DataFrame, symbol: str, name: str | None = None) -> pd.DataFrame:
         """Standardise yfinance DataFrame to our schema."""
         df = df.reset_index()
 
@@ -71,7 +85,7 @@ class USStockCollector(BaseCollector):
         df = df[keep].copy()
 
         df["symbol"] = symbol
-        df["name"] = None
+        df["name"] = name
         df["market"] = self.MARKET
         df["amount"] = None
         df["turnover"] = None
@@ -81,7 +95,11 @@ class USStockCollector(BaseCollector):
         df["change_pct"] = df["close"].pct_change() * 100
 
         # Ensure timezone-aware
-        df["time"] = pd.to_datetime(df["time"]).dt.tz_localize("America/New_York")
+        df["time"] = pd.to_datetime(df["time"])
+        if df["time"].dt.tz is None:
+            df["time"] = df["time"].dt.tz_localize("America/New_York")
+        else:
+            df["time"] = df["time"].dt.tz_convert("America/New_York")
 
         return df
 

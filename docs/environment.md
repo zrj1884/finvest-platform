@@ -123,12 +123,15 @@ docker compose exec postgres psql -U finvest
 - yfinance 1.2+（美股数据）
 - pandas 3.0+（数据处理）
 - apscheduler 3.11+（定时任务调度）
+- torch 2.0+（PyTorch，LSTM/Transformer 预测模型）
+- scikit-learn 1.8+（数据预处理辅助）
+- mlflow（模型实验追踪，可选）
 
 ---
 
 ## 数据库 Schema 状态
 
-**Alembic 迁移版本**: `002` (Add user OAuth fields)
+**Alembic 迁移版本**: `004` (News dedup cleanup)
 
 ### 业务表
 
@@ -147,6 +150,7 @@ docker compose exec postgres psql -U finvest
 | fund_nav | 基金净值 | 按月分区 |
 | bond_daily | 债券日线 | 按月分区 |
 | news_articles | 财经新闻 | 按周分区，保留 1 年 |
+| stock_features | 技术指标 + 基本面因子 | 按月分区 |
 
 ### 连续聚合视图
 
@@ -173,6 +177,16 @@ docker compose exec postgres psql -U finvest
 | 2026-03-12 | S1.6: 资讯与舆情采集 — 新浪财经/东方财富/雪球爬虫、宏观数据、APScheduler 定时调度 | 后端 |
 | 2026-03-12 | S1.7: 数据 API 层 — 行情/基金/债券/新闻查询 REST API、K线接口、Redis 缓存 | 后端 |
 | 2026-03-12 | S1.8: 基础 Web 看板 — Dashboard、行情表格、ECharts K线图、新闻流、响应式布局 | 前端 |
+| 2026-03-12 | S2.1: 特征工程管道 — 技术指标(MA/EMA/MACD/RSI/KDJ/布林带/ATR/OBV)、基本面因子(PE/PB/ROE/营收增长)、Feature Store | 后端, 数据库 |
+| 2026-03-12 | Alembic 迁移 003: stock_features hypertable（按月分区） | 数据库 |
+| 2026-03-12 | 添加 torch, scikit-learn, mlflow 依赖 | Python 依赖 |
+| 2026-03-12 | S2.2: 股票预测模型 — LSTM/Transformer/Ensemble 预测器、ModelTrainer(早停+MLflow)、Backtester(Sharpe/回撤/胜率) | 后端 |
+| 2026-03-12 | S2.3: LLM 网关 — 统一 OpenAI 兼容 API (DeepSeek/通义千问/OpenAI)、成本追踪、情感分析批量评分 | 后端 |
+| 2026-03-12 | S2.4: AI 投研报告 — Agent 工作流(数据收集→分析→报告)、个股/行业报告、Markdown 输出 | 后端, 前端 |
+| 2026-03-12 | S2.5: 回测 API — POST /backtest/run 端点，支持 LSTM/Transformer/Ensemble | 后端 |
+| 2026-03-12 | S2.6: AI 前端集成 — 个股详情页 AI 报告、市场情绪仪表盘、导航更新 | 前端 |
+| 2026-03-12 | 本地全链路测试与修复 — 数据采集名称填充、K线排序/周月聚合、US Stock 时区、基金/债券详情页、新闻搜索 | 全栈 |
+| 2026-03-12 | Alembic 迁移 004: 新闻去重(删除重复 source+url 行)、collector 改为 delete+insert 防重复 | 后端, 数据库 |
 
 ---
 

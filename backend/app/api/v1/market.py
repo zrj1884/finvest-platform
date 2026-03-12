@@ -79,19 +79,19 @@ async def get_stock_kline(
         return cached  # type: ignore[no-any-return]
 
     if period == "daily":
+        # Subquery: pick most recent `limit` rows, then return in ASC order for charting
         stmt = (
             select(StockDaily)
             .where(StockDaily.symbol == symbol, StockDaily.market == market)
-            .order_by(StockDaily.time.asc())
-            .limit(limit)
         )
         if start_date:
             stmt = stmt.where(StockDaily.time >= start_date)
         if end_date:
             stmt = stmt.where(StockDaily.time <= end_date)
+        stmt = stmt.order_by(StockDaily.time.desc()).limit(limit)
 
         result = await db.execute(stmt)
-        rows = result.scalars().all()
+        rows = list(reversed(result.scalars().all()))
         data: list[list[Any]] = [
             [r.time.isoformat(), float(r.open), float(r.close), float(r.low), float(r.high), r.volume]
             for r in rows
@@ -99,16 +99,17 @@ async def get_stock_kline(
     elif period in ("weekly", "monthly"):
         view = "stock_weekly" if period == "weekly" else "stock_monthly"
         query = text(f"""
-            SELECT bucket, open, close, low, high, volume
+            SELECT time, open, close, low, high, volume
             FROM {view}
-            WHERE symbol = :symbol
-            ORDER BY bucket ASC
+            WHERE symbol = :symbol AND market = :market
+            ORDER BY time DESC
             LIMIT :limit
         """)
-        result = await db.execute(query, {"symbol": symbol, "limit": limit})
+        result = await db.execute(query, {"symbol": symbol, "market": market, "limit": limit})
+        raw_rows = list(reversed(result.fetchall()))
         data = [
-            [row.bucket.isoformat(), float(row.open), float(row.close), float(row.low), float(row.high), int(row.volume)]
-            for row in result.fetchall()
+            [row.time.isoformat(), float(row.open), float(row.close), float(row.low), float(row.high), int(row.volume)]
+            for row in raw_rows
         ]
     else:
         data = []
@@ -196,11 +197,12 @@ async def get_bond_daily(
 async def get_news(
     source: str | None = Query(None, description="Filter by source"),
     symbol: str | None = Query(None, description="Filter by related symbol"),
+    keyword: str | None = Query(None, description="Fuzzy search in title and content"),
     limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
 ) -> list[dict[str, Any]]:
     """Get latest financial news."""
-    cache_key = f"news:{source}:{symbol}:{limit}"
+    cache_key = f"news:{source}:{symbol}:{keyword}:{limit}"
     cached = await _get_cache(cache_key)
     if cached is not None:
         return cached  # type: ignore[no-any-return]
@@ -210,6 +212,11 @@ async def get_news(
         stmt = stmt.where(NewsArticle.source == source)
     if symbol:
         stmt = stmt.where(NewsArticle.symbols.contains(symbol))
+    if keyword:
+        pattern = f"%{keyword}%"
+        stmt = stmt.where(
+            NewsArticle.title.ilike(pattern) | NewsArticle.content.ilike(pattern)
+        )
 
     result = await db.execute(stmt)
     rows = result.scalars().all()

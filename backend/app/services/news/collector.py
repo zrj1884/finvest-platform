@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from sqlalchemy import delete, tuple_
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -84,27 +85,30 @@ class NewsCollector:
         return await self._store(db, items)
 
     async def _store(self, db: AsyncSession, items: list[NewsItem]) -> int:
-        """Upsert news items into the database."""
+        """Upsert news items into the database.
+
+        TimescaleDB requires the partitioning column (time) in every unique
+        index, so we cannot create a unique constraint on (source, url) alone.
+        Instead we delete existing rows that share the same (source, url) as
+        the incoming batch, then insert fresh rows.
+        """
         if not items:
             return 0
 
         records: list[dict[str, Any]] = [item.to_dict() for item in items]
 
-        stmt = pg_insert(NewsArticle).values(records)
-
-        # On conflict, update content and sentiment (but keep original time/source/url)
-        table: Any = NewsArticle.__table__
-        pk_cols: set[str] = {c.name for c in table.primary_key.columns}
-        update_cols = {
-            c.name: stmt.excluded[c.name]
-            for c in table.columns
-            if c.name not in pk_cols
-        }
-
-        stmt = stmt.on_conflict_do_update(
-            index_elements=list(pk_cols),
-            set_=update_cols,
+        # Delete old rows with matching (source, url) to prevent duplicates
+        url_pairs = [(r["source"], r["url"]) for r in records]
+        del_stmt = delete(NewsArticle).where(
+            tuple_(NewsArticle.source, NewsArticle.url).in_(url_pairs)
         )
+        await db.execute(del_stmt)
+
+        # Insert new rows
+        stmt = pg_insert(NewsArticle).values(records)
+        # If two items in the same batch happen to share (time, source, url),
+        # do nothing on conflict with the existing PK.
+        stmt = stmt.on_conflict_do_nothing()
         await db.execute(stmt)
         await db.commit()
         return len(records)

@@ -5,6 +5,8 @@ import { getNews, type NewsArticle } from '../api/market'
 const news = ref<NewsArticle[]>([])
 const loading = ref(false)
 const selectedSource = ref<string>('')
+const searchKeyword = ref('')
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
 const sources = [
   { value: '', label: 'All Sources' },
@@ -16,12 +18,22 @@ const sources = [
 async function loadData() {
   loading.value = true
   try {
-    news.value = await getNews(50, selectedSource.value || undefined)
+    news.value = await getNews(
+      50,
+      selectedSource.value || undefined,
+      undefined,
+      searchKeyword.value.trim() || undefined,
+    )
   } catch {
     news.value = []
   } finally {
     loading.value = false
   }
+}
+
+function onSearchInput() {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(loadData, 400)
 }
 
 function formatTime(iso: string): string {
@@ -40,14 +52,23 @@ watch(selectedSource, loadData)
 
 <template>
   <div>
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
       <h1 class="text-2xl font-bold text-gray-900">Financial News</h1>
-      <select
-        v-model="selectedSource"
-        class="mt-3 sm:mt-0 border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500"
-      >
-        <option v-for="s in sources" :key="s.value" :value="s.value">{{ s.label }}</option>
-      </select>
+      <div class="flex gap-2">
+        <input
+          v-model="searchKeyword"
+          @input="onSearchInput"
+          type="text"
+          placeholder="Search news..."
+          class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500 w-48"
+        />
+        <select
+          v-model="selectedSource"
+          class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option v-for="s in sources" :key="s.value" :value="s.value">{{ s.label }}</option>
+        </select>
+      </div>
     </div>
 
     <div v-if="loading" class="text-center py-12 text-gray-500">Loading...</div>

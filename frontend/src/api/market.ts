@@ -94,10 +94,12 @@ export async function getNews(
   limit = 50,
   source?: string,
   symbol?: string,
+  keyword?: string,
 ): Promise<NewsArticle[]> {
   const params: Record<string, string | number> = { limit }
   if (source) params.source = source
   if (symbol) params.symbol = symbol
+  if (keyword) params.keyword = keyword
   const { data } = await api.get<NewsArticle[]>('/v1/market/news', { params })
   return data
 }

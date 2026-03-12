@@ -40,12 +40,31 @@ class FundCollector(BaseCollector):
             logger.warning("No data returned for fund %s", symbol)
             return pd.DataFrame()
 
-        return self._standardise(raw, symbol, start_date, end_date)
+        name = await self._fetch_name(symbol)
+        return self._standardise(raw, symbol, name, start_date, end_date)
+
+    async def _fetch_name(self, symbol: str) -> str | None:
+        """Fetch fund name via AKShare."""
+        import akshare as ak
+
+        try:
+            loop = asyncio.get_running_loop()
+            info = await loop.run_in_executor(
+                None,
+                partial(ak.fund_individual_basic_info_xq, symbol=symbol),
+            )
+            row = info[info["item"] == "基金名称"]
+            if not row.empty:
+                return str(row.iloc[0]["value"])
+        except Exception:
+            logger.debug("Could not fetch name for fund %s", symbol)
+        return None
 
     def _standardise(
         self,
         df: pd.DataFrame,
         symbol: str,
+        name: str | None = None,
         start_date: date | None = None,
         end_date: date | None = None,
     ) -> pd.DataFrame:
@@ -62,7 +81,7 @@ class FundCollector(BaseCollector):
         df = df[keep].copy()
 
         df["symbol"] = symbol
-        df["name"] = None
+        df["name"] = name
 
         df["time"] = pd.to_datetime(df["time"]).dt.tz_localize("Asia/Shanghai")
 

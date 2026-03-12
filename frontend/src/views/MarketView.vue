@@ -21,7 +21,7 @@ const marketLabels: Record<string, string> = {
 const defaultSymbols: Record<string, string[]> = {
   a_share: ['000001', '600519', '000858', '601318', '600036'],
   us_stock: ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA'],
-  hk_stock: ['00700', '09988', '09999', '01810', '03690'],
+  hk_stock: ['00700', '09988', '01810'],
 }
 
 async function loadData() {

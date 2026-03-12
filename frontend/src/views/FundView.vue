@@ -8,7 +8,7 @@ const funds = ref<FundNav[]>([])
 const loading = ref(false)
 const searchSymbol = ref('')
 
-const defaultFunds = ['110011', '163402', '000961', '001156', '005827']
+const defaultFunds = ['110011', '519300']
 
 async function loadData() {
   loading.value = true
@@ -73,7 +73,7 @@ onMounted(loadData)
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
-            <tr v-for="fund in funds" :key="fund.symbol" class="hover:bg-gray-50">
+            <tr v-for="fund in funds" :key="fund.symbol" @click="router.push(`/fund/${fund.symbol}`)" class="hover:bg-gray-50 cursor-pointer transition">
               <td class="px-4 py-3 text-sm font-medium text-blue-600">{{ fund.symbol }}</td>
               <td class="px-4 py-3 text-sm text-gray-700">{{ fund.name || '-' }}</td>
               <td class="px-4 py-3 text-sm text-right font-mono">{{ fund.nav.toFixed(4) }}</td>

@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { getBondDaily, type BondDaily } from '../api/market'
 
+const router = useRouter()
 const bonds = ref<BondDaily[]>([])
 const loading = ref(false)
 
-const defaultBonds = ['113050', '127045', '123136', '113648', '128108']
+const defaultBonds = ['sh019733', 'sh019732']
 
 async function loadData() {
   loading.value = true
@@ -47,7 +49,7 @@ onMounted(loadData)
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
-            <tr v-for="bond in bonds" :key="bond.symbol" class="hover:bg-gray-50">
+            <tr v-for="bond in bonds" :key="bond.symbol" @click="router.push(`/bond/${bond.symbol}`)" class="hover:bg-gray-50 cursor-pointer transition">
               <td class="px-4 py-3 text-sm font-medium text-blue-600">{{ bond.symbol }}</td>
               <td class="px-4 py-3 text-sm text-gray-700">{{ bond.name || '-' }}</td>
               <td class="px-4 py-3 text-sm text-gray-500">{{ bond.bond_type || '-' }}</td>

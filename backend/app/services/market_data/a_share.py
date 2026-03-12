@@ -54,7 +54,9 @@ class AShareCollector(BaseCollector):
             logger.warning("No data returned for A-share %s", symbol)
             return pd.DataFrame()
 
-        return self._standardise(raw, symbol)
+        # Fetch stock name
+        name = await self._fetch_name(symbol)
+        return self._standardise(raw, symbol, name)
 
     async def fetch_realtime(self, symbols: list[str] | None = None) -> pd.DataFrame:
         """Fetch realtime A-share quotes.
@@ -79,7 +81,24 @@ class AShareCollector(BaseCollector):
 
         return self._standardise_realtime(raw)
 
-    def _standardise(self, df: pd.DataFrame, symbol: str) -> pd.DataFrame:
+    async def _fetch_name(self, symbol: str) -> str | None:
+        """Fetch stock name via AKShare individual info API."""
+        import akshare as ak
+
+        try:
+            loop = asyncio.get_running_loop()
+            info = await loop.run_in_executor(
+                None,
+                partial(ak.stock_individual_info_em, symbol=symbol),
+            )
+            row = info[info["item"] == "股票简称"]
+            if not row.empty:
+                return str(row.iloc[0]["value"])
+        except Exception:
+            logger.debug("Could not fetch name for %s", symbol)
+        return None
+
+    def _standardise(self, df: pd.DataFrame, symbol: str, name: str | None = None) -> pd.DataFrame:
         """Standardise AKShare A-share history DataFrame to our schema."""
         col_map: dict[str, str] = {
             "日期": "time",
@@ -100,7 +119,7 @@ class AShareCollector(BaseCollector):
         df = df[keep].copy()
 
         df["symbol"] = symbol
-        df["name"] = None  # name not in history API
+        df["name"] = name
         df["market"] = self.MARKET
 
         # Parse time

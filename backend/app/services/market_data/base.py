@@ -86,15 +86,26 @@ class BaseCollector(ABC):
 
         from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-        stmt = pg_insert(model).values(records)
+        # Batch size: each record has N columns, asyncpg limits params to 32767
+        n_cols = len(records[0])
+        batch_size = max(1, 32000 // n_cols) if n_cols > 0 else len(records)
 
-        # Build the SET clause for ON CONFLICT (all columns except PKs)
         pk_cols = {c.name for c in model.__table__.primary_key.columns}
-        update_cols = {c.name: stmt.excluded[c.name] for c in model.__table__.columns if c.name not in pk_cols}
 
-        stmt = stmt.on_conflict_do_update(
-            index_elements=list(pk_cols),
-            set_=update_cols,
-        )
-        await db.execute(stmt)
-        return len(records)
+        total = 0
+        for i in range(0, len(records), batch_size):
+            batch = records[i : i + batch_size]
+            stmt = pg_insert(model).values(batch)
+            update_cols = {
+                c.name: stmt.excluded[c.name]
+                for c in model.__table__.columns
+                if c.name not in pk_cols
+            }
+            stmt = stmt.on_conflict_do_update(
+                index_elements=list(pk_cols),
+                set_=update_cols,
+            )
+            await db.execute(stmt)
+            total += len(batch)
+
+        return total

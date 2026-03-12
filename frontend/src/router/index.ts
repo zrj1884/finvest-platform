@@ -24,9 +24,19 @@ const routes = [
         component: () => import('../views/FundView.vue'),
       },
       {
+        path: 'fund/:symbol',
+        name: 'FundDetail',
+        component: () => import('../views/FundDetailView.vue'),
+      },
+      {
         path: 'bond',
         name: 'Bond',
         component: () => import('../views/BondView.vue'),
+      },
+      {
+        path: 'bond/:symbol',
+        name: 'BondDetail',
+        component: () => import('../views/BondDetailView.vue'),
       },
       {
         path: 'news',

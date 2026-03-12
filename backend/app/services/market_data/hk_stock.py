@@ -54,9 +54,33 @@ class HKStockCollector(BaseCollector):
             logger.warning("No data returned for HK stock %s", symbol)
             return pd.DataFrame()
 
-        return self._standardise(raw, symbol)
+        name = await self._fetch_name(symbol)
+        return self._standardise(raw, symbol, name)
 
-    def _standardise(self, df: pd.DataFrame, symbol: str) -> pd.DataFrame:
+    # Well-known HK stock names (fallback when API unavailable)
+    _HK_NAMES: dict[str, str] = {
+        "00700": "腾讯控股", "09988": "阿里巴巴-W", "01810": "小米集团-W",
+        "09999": "网易-S", "03690": "美团-W", "00005": "汇丰控股",
+        "02318": "中国平安", "00388": "香港交易所", "01024": "快手-W",
+        "09618": "京东集团-SW", "09888": "百度集团-SW",
+    }
+
+    async def _fetch_name(self, symbol: str) -> str | None:
+        """Fetch HK stock name: try yfinance first, then fallback to known names."""
+        try:
+            import yfinance as yf
+
+            loop = asyncio.get_running_loop()
+            ticker = yf.Ticker(f"{symbol}.HK")
+            info: dict[str, object] = await loop.run_in_executor(None, lambda: ticker.info)
+            name = str(info.get("shortName") or info.get("longName") or "")
+            if name:
+                return name
+        except Exception:
+            logger.debug("yfinance lookup failed for HK %s, using fallback", symbol)
+        return self._HK_NAMES.get(symbol)
+
+    def _standardise(self, df: pd.DataFrame, symbol: str, name: str | None = None) -> pd.DataFrame:
         """Standardise AKShare HK stock DataFrame to our schema."""
         col_map: dict[str, str] = {
             "日期": "time",
@@ -76,7 +100,7 @@ class HKStockCollector(BaseCollector):
         df = df[keep].copy()
 
         df["symbol"] = symbol
-        df["name"] = None
+        df["name"] = name
         df["market"] = self.MARKET
 
         df["time"] = pd.to_datetime(df["time"]).dt.tz_localize("Asia/Hong_Kong")
