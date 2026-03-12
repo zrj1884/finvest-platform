@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from decimal import Decimal
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -114,7 +115,7 @@ async def list_orders(
     offset: int = Query(0, ge=0),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """List orders for an account with pagination."""
     account = await account_crud.get_by_id(db, account_id)
     if account is None or account.user_id != user.id:
