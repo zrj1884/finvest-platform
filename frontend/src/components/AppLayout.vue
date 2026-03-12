@@ -1,7 +1,18 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
+const auth = useAuthStore()
+const router = useRouter()
 const mobileMenuOpen = ref(false)
+
+function handleLogout() {
+  auth.logout()
+  router.push('/login')
+}
+
+onMounted(() => auth.init())
 
 const navItems = [
   { name: 'Dashboard', path: '/' },
@@ -38,6 +49,17 @@ const navItems = [
                 {{ item.name }}
               </router-link>
             </div>
+          </div>
+          <!-- Auth -->
+          <div class="hidden md:flex items-center gap-3 ml-4">
+            <template v-if="auth.isLoggedIn">
+              <span class="text-sm text-gray-500">{{ auth.user?.nickname || auth.user?.email }}</span>
+              <button
+                @click="handleLogout"
+                class="text-sm text-gray-500 hover:text-red-600"
+              >Logout</button>
+            </template>
+            <router-link v-else to="/login" class="text-sm text-blue-600 hover:text-blue-800">Sign In</router-link>
           </div>
           <!-- Mobile menu button -->
           <div class="flex items-center md:hidden">

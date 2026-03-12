@@ -2,7 +2,15 @@ import { createRouter, createWebHistory } from 'vue-router'
 import AppLayout from '../components/AppLayout.vue'
 import HomeView from '../views/HomeView.vue'
 
+// Pages that require authentication
+const AUTH_REQUIRED = new Set(['Trading', 'Portfolio', 'Accounts'])
+
 const routes = [
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('../views/LoginView.vue'),
+  },
   {
     path: '/',
     component: AppLayout,
@@ -75,6 +83,16 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+// Navigation guard: redirect to login for protected pages
+router.beforeEach((to) => {
+  if (AUTH_REQUIRED.has(to.name as string)) {
+    const token = localStorage.getItem('access_token')
+    if (!token) {
+      return { name: 'Login', query: { redirect: to.fullPath } }
+    }
+  }
 })
 
 export default router

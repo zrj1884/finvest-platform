@@ -37,6 +37,46 @@ def get_rules(market: str) -> MarketRules:
     return rules
 
 
+async def get_stock_name(db: AsyncSession, symbol: str, market: str) -> str | None:
+    """Fetch the stock/fund/bond name from the latest data row."""
+    from sqlalchemy import text
+
+    if market in (Market.A_SHARE.value, Market.US_STOCK.value, Market.HK_STOCK.value):
+        row = await db.execute(
+            text(
+                "SELECT name FROM stock_daily "
+                "WHERE symbol = :symbol AND market = :market AND name IS NOT NULL "
+                "ORDER BY time DESC LIMIT 1"
+            ),
+            {"symbol": symbol, "market": market},
+        )
+    elif market == Market.FUND.value:
+        row = await db.execute(
+            text(
+                "SELECT name FROM fund_nav "
+                "WHERE symbol = :symbol AND name IS NOT NULL "
+                "ORDER BY time DESC LIMIT 1"
+            ),
+            {"symbol": symbol},
+        )
+    elif market == Market.BOND.value:
+        row = await db.execute(
+            text(
+                "SELECT name FROM bond_daily "
+                "WHERE symbol = :symbol AND name IS NOT NULL "
+                "ORDER BY time DESC LIMIT 1"
+            ),
+            {"symbol": symbol},
+        )
+    else:
+        return None
+
+    result = row.first()
+    if result is None:
+        return None
+    return str(result[0]) if result[0] else None
+
+
 async def get_latest_price(db: AsyncSession, symbol: str, market: str) -> Decimal | None:
     """Fetch the latest close price from the appropriate table."""
     from sqlalchemy import text
