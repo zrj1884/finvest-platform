@@ -87,7 +87,7 @@ async def place_order(
 
     # Submit to gateway
     gateway = get_gateway(is_simulated=account.is_simulated, broker=account.broker)
-    order = await gateway.submit_order(db, order)
+    order = await gateway.submit_order(db, order, account)
 
     return OrderRead.model_validate(order)
 

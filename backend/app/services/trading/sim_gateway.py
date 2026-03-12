@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.account import Account
 from app.models.order import Order, OrderStatus
 from app.services.trading.gateway import TradingGateway
 from app.services.trading.matching_engine import try_fill
@@ -15,10 +16,8 @@ from app.crud import order as order_crud
 class SimulatedGateway(TradingGateway):
     """Paper trading gateway using the simulated matching engine."""
 
-    async def submit_order(self, db: AsyncSession, order: Order) -> Order:
+    async def submit_order(self, db: AsyncSession, order: Order, account: Account) -> Order:
         """Submit order to the simulated matching engine."""
-        # Load account relationship (needed for balance checks)
-        account = await order.awaitable_attrs.account
         return await try_fill(db, order, account)
 
     async def cancel_order(self, db: AsyncSession, order: Order) -> Order:

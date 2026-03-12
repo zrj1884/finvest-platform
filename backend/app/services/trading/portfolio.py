@@ -71,7 +71,7 @@ async def apply_fill(
         new_qty = qty - fill_qty
         new_realized = realized + pnl
 
-        update_kwargs: dict = {
+        update_kwargs: dict[str, object] = {
             "quantity": int(new_qty),
             "available_quantity": pos.available_quantity - fill_quantity,
             "current_price": float(fill_price),

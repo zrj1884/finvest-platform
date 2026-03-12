@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.account import Account
 from app.models.order import Order
 
 
@@ -18,7 +19,7 @@ class TradingGateway(ABC):
     """
 
     @abstractmethod
-    async def submit_order(self, db: AsyncSession, order: Order) -> Order:
+    async def submit_order(self, db: AsyncSession, order: Order, account: Account) -> Order:
         """Submit an order for execution.
 
         For sim: attempt immediate fill.

@@ -33,7 +33,7 @@ async def create(db: AsyncSession, **kwargs: Any) -> Account:
 
 async def update_balance(db: AsyncSession, account: Account, delta: Decimal) -> Account:
     """Adjust account balance by delta (positive = credit, negative = debit)."""
-    account.balance = Decimal(str(account.balance)) + delta
+    account.balance = float(Decimal(str(account.balance)) + delta)
     await db.flush()
     await db.refresh(account)
     return account
@@ -52,7 +52,7 @@ async def reset(db: AsyncSession, account: Account, balance: Decimal) -> Account
     for order in list(account.orders):
         await db.delete(order)
 
-    account.balance = balance
+    account.balance = float(balance)
     await db.flush()
     await db.refresh(account)
     return account
