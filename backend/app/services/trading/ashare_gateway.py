@@ -94,7 +94,7 @@ class EasyTraderAdapter(BrokerAdapter):
 
     async def connect(self, account_no: str, password: str) -> None:
         try:
-            import easytrader  # type: ignore[import-untyped]
+            import easytrader
         except ImportError:
             raise RuntimeError(
                 "easytrader is not installed. Install with: pip install easytrader\n"
