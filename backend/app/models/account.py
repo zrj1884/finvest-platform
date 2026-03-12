@@ -35,7 +35,10 @@ class Account(UUIDMixin, TimestampMixin, Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    market: Mapped[Market] = mapped_column(Enum(Market), nullable=False)
+    market: Mapped[Market] = mapped_column(
+        Enum(Market, values_callable=lambda e: [m.value for m in e], name="market_enum", create_type=False),
+        nullable=False,
+    )
     broker: Mapped[str | None] = mapped_column(String(100))  # 券商名称
     account_no: Mapped[str | None] = mapped_column(String(100))  # 券商账号
     balance: Mapped[float] = mapped_column(Numeric(20, 4), default=0)  # 可用资金

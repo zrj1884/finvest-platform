@@ -18,8 +18,9 @@ class TestCanTransition:
     def test_pending_to_rejected(self):
         assert can_transition(OrderStatus.PENDING, OrderStatus.REJECTED) is True
 
-    def test_pending_to_filled_invalid(self):
-        assert can_transition(OrderStatus.PENDING, OrderStatus.FILLED) is False
+    def test_pending_to_filled(self):
+        """Simulated market orders can go directly PENDING -> FILLED."""
+        assert can_transition(OrderStatus.PENDING, OrderStatus.FILLED) is True
 
     def test_submitted_to_filled(self):
         assert can_transition(OrderStatus.SUBMITTED, OrderStatus.FILLED) is True

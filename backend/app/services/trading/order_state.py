@@ -6,7 +6,7 @@ from app.models.order import OrderStatus
 
 # Allowed state transitions: from_status -> set of valid target statuses
 VALID_TRANSITIONS: dict[OrderStatus, set[OrderStatus]] = {
-    OrderStatus.PENDING: {OrderStatus.SUBMITTED, OrderStatus.REJECTED},
+    OrderStatus.PENDING: {OrderStatus.SUBMITTED, OrderStatus.FILLED, OrderStatus.REJECTED},
     OrderStatus.SUBMITTED: {
         OrderStatus.PARTIAL_FILLED,
         OrderStatus.FILLED,

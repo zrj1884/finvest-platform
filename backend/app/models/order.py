@@ -44,9 +44,19 @@ class Order(UUIDMixin, TimestampMixin, Base):
     )
     symbol: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     name: Mapped[str | None] = mapped_column(String(100))
-    side: Mapped[OrderSide] = mapped_column(Enum(OrderSide), nullable=False)
-    order_type: Mapped[OrderType] = mapped_column(Enum(OrderType), nullable=False)
-    status: Mapped[OrderStatus] = mapped_column(Enum(OrderStatus), default=OrderStatus.PENDING, index=True)
+    side: Mapped[OrderSide] = mapped_column(
+        Enum(OrderSide, values_callable=lambda e: [m.value for m in e], name="order_side_enum", create_type=False),
+        nullable=False,
+    )
+    order_type: Mapped[OrderType] = mapped_column(
+        Enum(OrderType, values_callable=lambda e: [m.value for m in e], name="order_type_enum", create_type=False),
+        nullable=False,
+    )
+    status: Mapped[OrderStatus] = mapped_column(
+        Enum(OrderStatus, values_callable=lambda e: [m.value for m in e], name="order_status_enum", create_type=False),
+        default=OrderStatus.PENDING,
+        index=True,
+    )
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)  # 委托数量
     filled_quantity: Mapped[int] = mapped_column(Integer, default=0)  # 成交数量
     price: Mapped[float | None] = mapped_column(Numeric(20, 4))  # 委托价格（限价单）
