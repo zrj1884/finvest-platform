@@ -87,6 +87,9 @@ async def run_backtest(
     n_features = data.X_train.shape[2]
 
     # 4. Create model
+    import torch.nn as nn
+
+    model: nn.Module
     if req.model_type == "lstm":
         model = LSTMPredictor(input_size=n_features, hidden_size=64, num_layers=2)
     elif req.model_type == "transformer":
@@ -125,7 +128,7 @@ async def run_backtest(
         sharpe_ratio=summary["sharpe_ratio"],
         max_drawdown_pct=summary["max_drawdown_pct"],
         win_rate_pct=summary["win_rate_pct"],
-        total_trades=summary["total_trades"],
+        total_trades=int(summary["total_trades"]),
         equity_curve=curve,
         train_loss=train_result.train_losses[-1] if train_result.train_losses else 0.0,
         val_loss=train_result.best_val_loss,
