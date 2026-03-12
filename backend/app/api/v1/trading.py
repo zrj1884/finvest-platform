@@ -105,16 +105,17 @@ async def place_order(
     return OrderRead.model_validate(order)
 
 
-@router.get("/orders", response_model=list[OrderRead])
+@router.get("/orders")
 async def list_orders(
     account_id: uuid.UUID = Query(...),
     order_status: str | None = Query(None, alias="status"),
     symbol: str | None = Query(None),
-    limit: int = Query(100, ge=1, le=500),
+    limit: int = Query(20, ge=1, le=500),
+    offset: int = Query(0, ge=0),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> list[OrderRead]:
-    """List orders for an account."""
+) -> dict:
+    """List orders for an account with pagination."""
     account = await account_crud.get_by_id(db, account_id)
     if account is None or account.user_id != user.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
@@ -129,10 +130,16 @@ async def list_orders(
                 detail=f"Invalid status: {order_status}",
             )
 
-    orders = await order_crud.list_by_account(
-        db, account_id, status=status_filter, symbol=symbol, limit=limit
+    total = await order_crud.count_by_account(
+        db, account_id, status=status_filter, symbol=symbol
     )
-    return [OrderRead.model_validate(o) for o in orders]
+    orders = await order_crud.list_by_account(
+        db, account_id, status=status_filter, symbol=symbol, limit=limit, offset=offset
+    )
+    return {
+        "items": [OrderRead.model_validate(o) for o in orders],
+        "total": total,
+    }
 
 
 @router.get("/orders/{order_id}", response_model=OrderRead)

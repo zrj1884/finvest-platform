@@ -17,7 +17,17 @@ import AssetPieChart from '../components/AssetPieChart.vue'
 import PerformanceCurve from '../components/PerformanceCurve.vue'
 import HoldingsTable from '../components/HoldingsTable.vue'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+
+function formatDateTime(iso: string): string {
+  const loc = locale.value === 'zh' ? 'zh-CN' : 'en-US'
+  return new Date(iso).toLocaleString(loc, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
 
 const overview = ref<AssetOverview | null>(null)
 const allocation = ref<MarketAllocation[]>([])
@@ -160,7 +170,7 @@ onMounted(load)
             <tbody class="divide-y divide-gray-100">
               <tr v-for="cf in cashFlows" :key="cf.id" class="hover:bg-gray-50">
                 <td class="px-3 py-2 text-gray-500">
-                  {{ new Date(cf.filled_at).toLocaleString() }}
+                  {{ formatDateTime(cf.filled_at) }}
                 </td>
                 <td class="px-3 py-2 text-gray-500">{{ cf.account_name }}</td>
                 <td class="px-3 py-2 font-medium">{{ cf.symbol }}</td>

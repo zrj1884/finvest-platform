@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { getNews, type NewsArticle } from '../api/market'
+
+const { t, locale } = useI18n()
 
 const news = ref<NewsArticle[]>([])
 const loading = ref(false)
@@ -9,10 +12,10 @@ const searchKeyword = ref('')
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
 const sources = [
-  { value: '', label: 'All Sources' },
-  { value: 'sina_finance', label: 'Sina Finance' },
-  { value: 'eastmoney', label: 'East Money' },
-  { value: 'xueqiu', label: 'Xueqiu' },
+  { value: '', key: 'news.allSources' },
+  { value: 'sina_finance', key: 'news.sinaFinance' },
+  { value: 'eastmoney', key: 'news.eastMoney' },
+  { value: 'xueqiu', key: 'news.xueqiu' },
 ]
 
 async function loadData() {
@@ -38,12 +41,13 @@ function onSearchInput() {
 
 function formatTime(iso: string): string {
   const d = new Date(iso)
-  return d.toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  const loc = locale.value === 'zh' ? 'zh-CN' : 'en-US'
+  return d.toLocaleString(loc, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 function sourceLabel(source: string): string {
   const found = sources.find((s) => s.value === source)
-  return found?.label || source
+  return found ? t(found.key) : source
 }
 
 onMounted(loadData)
@@ -53,28 +57,28 @@ watch(selectedSource, loadData)
 <template>
   <div>
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
-      <h1 class="text-2xl font-bold text-gray-900">Financial News</h1>
+      <h1 class="text-2xl font-bold text-gray-900">{{ t('news.title') }}</h1>
       <div class="flex gap-2">
         <input
           v-model="searchKeyword"
           @input="onSearchInput"
           type="text"
-          placeholder="Search news..."
+          :placeholder="t('news.searchPlaceholder')"
           class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500 w-48"
         />
         <select
           v-model="selectedSource"
           class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500"
         >
-          <option v-for="s in sources" :key="s.value" :value="s.value">{{ s.label }}</option>
+          <option v-for="s in sources" :key="s.value" :value="s.value">{{ t(s.key) }}</option>
         </select>
       </div>
     </div>
 
-    <div v-if="loading" class="text-center py-12 text-gray-500">Loading...</div>
+    <div v-if="loading" class="text-center py-12 text-gray-500">{{ t('common.loading') }}</div>
 
     <div v-else-if="news.length === 0" class="text-center py-12 text-gray-500">
-      No news available.
+      {{ t('news.noArticles') }}
     </div>
 
     <div v-else class="space-y-3">
@@ -108,7 +112,7 @@ watch(selectedSource, loadData)
             class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
             :class="article.sentiment_score >= 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'"
           >
-            Sentiment: {{ article.sentiment_score.toFixed(2) }}
+            {{ t('news.sentiment') }}: {{ article.sentiment_score.toFixed(2) }}
           </span>
         </div>
       </a>

@@ -89,7 +89,8 @@ const router = createRouter({
 router.beforeEach((to) => {
   if (AUTH_REQUIRED.has(to.name as string)) {
     const token = localStorage.getItem('access_token')
-    if (!token) {
+    const refreshTokenVal = localStorage.getItem('refresh_token')
+    if (!token && !refreshTokenVal) {
       return { name: 'Login', query: { redirect: to.fullPath } }
     }
   }

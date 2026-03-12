@@ -31,6 +31,8 @@ class FundCollector(BaseCollector):
         import akshare as ak
 
         loop = asyncio.get_running_loop()
+
+        # Fetch unit NAV (单位净值走势) — contains: 净值日期, 单位净值, 日增长率
         raw: pd.DataFrame = await loop.run_in_executor(
             None,
             partial(ak.fund_open_fund_info_em, symbol=symbol, indicator="单位净值走势"),
@@ -39,6 +41,19 @@ class FundCollector(BaseCollector):
         if raw.empty:
             logger.warning("No data returned for fund %s", symbol)
             return pd.DataFrame()
+
+        # Fetch accumulated NAV (累计净值走势) — contains: 净值日期, 累计净值
+        try:
+            acc_raw: pd.DataFrame = await loop.run_in_executor(
+                None,
+                partial(ak.fund_open_fund_info_em, symbol=symbol, indicator="累计净值走势"),
+            )
+            if not acc_raw.empty and "累计净值" in acc_raw.columns and "净值日期" in acc_raw.columns:
+                acc_raw["净值日期"] = pd.to_datetime(acc_raw["净值日期"]).dt.strftime("%Y-%m-%d")
+                raw["净值日期"] = pd.to_datetime(raw["净值日期"]).dt.strftime("%Y-%m-%d")
+                raw = raw.merge(acc_raw[["净值日期", "累计净值"]], on="净值日期", how="left")
+        except Exception:
+            logger.debug("Could not fetch accumulated NAV for fund %s", symbol)
 
         name = await self._fetch_name(symbol)
         return self._standardise(raw, symbol, name, start_date, end_date)

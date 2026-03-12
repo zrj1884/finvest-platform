@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import { listAccounts, type Account } from '../api/trading'
 import OrderPanel from '../components/OrderPanel.vue'
 import OrderList from '../components/OrderList.vue'
 import PositionTable from '../components/PositionTable.vue'
 
+const STORAGE_KEY = 'finvest_last_account_id'
+
 const { t } = useI18n()
+const route = useRoute()
 
 const accounts = ref<Account[]>([])
 const selectedAccountId = ref('')
@@ -17,13 +21,27 @@ const selectedAccount = computed(() => accounts.value.find((a) => a.id === selec
 const orderListRef = ref<InstanceType<typeof OrderList>>()
 const positionRef = ref<InstanceType<typeof PositionTable>>()
 
+// Persist account selection to localStorage
+watch(selectedAccountId, (id) => {
+  if (id) localStorage.setItem(STORAGE_KEY, id)
+})
+
 async function loadAccounts() {
   loading.value = true
   try {
     accounts.value = await listAccounts()
-    const first = accounts.value[0]
-    if (first && !selectedAccountId.value) {
-      selectedAccountId.value = first.id
+    if (accounts.value.length > 0 && !selectedAccountId.value) {
+      // Priority: query param > localStorage > first account
+      const queryId = route.query.account as string | undefined
+      const savedId = localStorage.getItem(STORAGE_KEY)
+      const ids = new Set(accounts.value.map((a) => a.id))
+      if (queryId && ids.has(queryId)) {
+        selectedAccountId.value = queryId
+      } else if (savedId && ids.has(savedId)) {
+        selectedAccountId.value = savedId
+      } else {
+        selectedAccountId.value = accounts.value[0].id
+      }
     }
   } catch {
     accounts.value = []
@@ -32,10 +50,12 @@ async function loadAccounts() {
   }
 }
 
-function onOrderPlaced() {
-  orderListRef.value?.refresh()
-  positionRef.value?.refresh()
-  loadAccounts()
+async function onOrderPlaced() {
+  await Promise.all([
+    orderListRef.value?.refresh(),
+    positionRef.value?.refresh(),
+    loadAccounts(),
+  ])
 }
 
 onMounted(loadAccounts)

@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { getNews, type NewsArticle } from '../api/market'
+
+const { t, locale } = useI18n()
 
 const props = defineProps<{
   keyword: string
@@ -23,7 +26,8 @@ async function loadNews() {
 
 function formatTime(iso: string): string {
   const d = new Date(iso)
-  return d.toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  const loc = locale.value === 'zh' ? 'zh-CN' : 'en-US'
+  return d.toLocaleString(loc, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 onMounted(loadNews)
@@ -32,10 +36,10 @@ watch(() => props.keyword, loadNews)
 
 <template>
   <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-    <h2 class="text-lg font-bold text-gray-900 mb-4">Related News</h2>
-    <div v-if="loading" class="text-center py-4 text-gray-500 text-sm">Loading...</div>
+    <h2 class="text-lg font-bold text-gray-900 mb-4">{{ t('news.relatedNews') }}</h2>
+    <div v-if="loading" class="text-center py-4 text-gray-500 text-sm">{{ t('common.loading') }}</div>
     <div v-else-if="articles.length === 0" class="text-center py-4 text-gray-400 text-sm">
-      No related news found
+      {{ t('news.noNews') }}
     </div>
     <div v-else class="space-y-3">
       <a

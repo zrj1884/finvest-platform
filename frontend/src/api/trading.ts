@@ -100,14 +100,20 @@ export async function placeOrder(data: OrderCreateRequest): Promise<OrderRecord>
   return resp.data
 }
 
+export interface OrderListResponse {
+  items: OrderRecord[]
+  total: number
+}
+
 export async function listOrders(
   accountId: string,
   status?: string,
   symbol?: string,
-  limit?: number,
-): Promise<OrderRecord[]> {
-  const resp = await api.get<OrderRecord[]>('/v1/trading/orders', {
-    params: { account_id: accountId, status, symbol, limit },
+  limit = 20,
+  offset = 0,
+): Promise<OrderListResponse> {
+  const resp = await api.get<OrderListResponse>('/v1/trading/orders', {
+    params: { account_id: accountId, status, symbol, limit, offset },
   })
   return resp.data
 }

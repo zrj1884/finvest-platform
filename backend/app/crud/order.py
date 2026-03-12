@@ -22,15 +22,34 @@ async def list_by_account(
     status: OrderStatus | None = None,
     symbol: str | None = None,
     limit: int = 100,
+    offset: int = 0,
 ) -> list[Order]:
     stmt = select(Order).where(Order.account_id == account_id)
     if status is not None:
         stmt = stmt.where(Order.status == status)
     if symbol is not None:
         stmt = stmt.where(Order.symbol == symbol)
-    stmt = stmt.order_by(Order.created_at.desc()).limit(limit)
+    stmt = stmt.order_by(Order.created_at.desc()).offset(offset).limit(limit)
     result = await db.execute(stmt)
     return list(result.scalars().all())
+
+
+async def count_by_account(
+    db: AsyncSession,
+    account_id: uuid.UUID,
+    *,
+    status: OrderStatus | None = None,
+    symbol: str | None = None,
+) -> int:
+    from sqlalchemy import func
+
+    stmt = select(func.count()).select_from(Order).where(Order.account_id == account_id)
+    if status is not None:
+        stmt = stmt.where(Order.status == status)
+    if symbol is not None:
+        stmt = stmt.where(Order.symbol == symbol)
+    result = await db.execute(stmt)
+    return result.scalar_one()
 
 
 async def create(db: AsyncSession, **kwargs: Any) -> Order:

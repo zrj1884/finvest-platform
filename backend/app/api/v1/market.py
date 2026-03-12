@@ -22,7 +22,128 @@ CACHE_TTL_HISTORY = 3600  # 1 hour for historical data
 CACHE_TTL_NEWS = 300  # 5 min for news
 
 
-# --- Stock endpoints ---
+# --- Symbol search (autocomplete) ---
+
+
+@router.get("/symbols/search")
+async def search_symbols(
+    q: str = Query(..., min_length=1, max_length=20, description="Search query"),
+    market: str = Query("a_share", description="Market: a_share, us_stock, hk_stock, fund, bond"),
+    limit: int = Query(10, ge=1, le=30),
+    db: AsyncSession = Depends(get_db),
+) -> list[dict[str, str]]:
+    """Search symbols by code or name prefix for autocomplete."""
+    pattern = f"%{q}%"
+    if market in ("a_share", "us_stock", "hk_stock"):
+        stmt = text("""
+            SELECT DISTINCT ON (symbol) symbol, name
+            FROM stock_daily
+            WHERE market = :market AND (symbol ILIKE :pattern OR name ILIKE :pattern)
+            ORDER BY symbol, date DESC
+            LIMIT :lim
+        """)
+    elif market == "fund":
+        stmt = text("""
+            SELECT DISTINCT ON (symbol) symbol, name
+            FROM fund_nav
+            WHERE symbol ILIKE :pattern OR name ILIKE :pattern
+            ORDER BY symbol, date DESC
+            LIMIT :lim
+        """)
+    elif market == "bond":
+        stmt = text("""
+            SELECT DISTINCT ON (symbol) symbol, name
+            FROM bond_daily
+            WHERE symbol ILIKE :pattern OR name ILIKE :pattern
+            ORDER BY symbol, date DESC
+            LIMIT :lim
+        """)
+    else:
+        return []
+    result = await db.execute(stmt, {"market": market, "pattern": pattern, "lim": limit})
+    return [{"symbol": row[0], "name": row[1] or ""} for row in result.fetchall()]
+
+
+# --- Stock list (snapshot) ---
+
+
+@router.get("/stocks/snapshot")
+async def list_stock_snapshot(
+    market: str = Query("a_share", description="Market: a_share, us_stock, hk_stock"),
+    search: str | None = Query(None, description="Search by symbol or name"),
+    sort_by: str = Query("symbol", description="Sort field: symbol, name, close, change_pct, volume, time"),
+    sort_order: str = Query("asc", description="Sort order: asc or desc"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Get the latest snapshot for each symbol in the market, with pagination and sorting."""
+    cache_key = f"stock:snapshot:{market}:{search}:{sort_by}:{sort_order}:{page}:{page_size}"
+    cached = await _get_cache(cache_key)
+    if cached is not None:
+        return cached  # type: ignore[no-any-return]
+
+    # Use DISTINCT ON to get the latest row per symbol
+    allowed_sort = {"symbol", "name", "close", "change_pct", "volume", "time"}
+    col = sort_by if sort_by in allowed_sort else "symbol"
+    order = "DESC" if sort_order == "desc" else "ASC"
+    # Null handling for change_pct
+    null_pos = "NULLS LAST" if order == "ASC" else "NULLS FIRST"
+
+    search_clause = ""
+    params: dict[str, Any] = {"market": market, "limit": page_size, "offset": (page - 1) * page_size}
+    if search:
+        search_clause = "AND (s.symbol ILIKE :search OR s.name ILIKE :search)"
+        params["search"] = f"%{search}%"
+
+    query = text(f"""
+        WITH ranked AS (
+            SELECT *,
+                ROW_NUMBER() OVER (
+                    PARTITION BY symbol
+                    ORDER BY (CASE WHEN change_pct IS NOT NULL THEN 0 ELSE 1 END), time DESC
+                ) AS rn
+            FROM stock_daily
+            WHERE market = :market AND name IS NOT NULL AND name <> ''
+        ),
+        latest AS (
+            SELECT * FROM ranked WHERE rn = 1
+        )
+        SELECT *, COUNT(*) OVER() AS total_count
+        FROM latest s
+        WHERE 1=1 {search_clause}
+        ORDER BY {col} {order} {null_pos}
+        LIMIT :limit OFFSET :offset
+    """)
+
+    result = await db.execute(query, params)
+    rows = result.fetchall()
+
+    total = rows[0].total_count if rows else 0
+    items = []
+    for r in rows:
+        items.append({
+            "time": r.time.isoformat(),
+            "symbol": r.symbol,
+            "name": r.name,
+            "market": r.market,
+            "open": float(r.open),
+            "high": float(r.high),
+            "low": float(r.low),
+            "close": float(r.close),
+            "volume": r.volume,
+            "amount": float(r.amount) if r.amount else None,
+            "turnover": float(r.turnover) if r.turnover else None,
+            "change_pct": float(r.change_pct) if r.change_pct else None,
+            "amplitude": float(r.amplitude) if r.amplitude else None,
+        })
+
+    data = {"items": items, "total": total, "page": page, "page_size": page_size}
+    await _set_cache(cache_key, data, CACHE_TTL_SNAPSHOT)
+    return data
+
+
+# --- Stock detail endpoints ---
 
 
 @router.get("/stocks/{symbol}/daily")
@@ -118,7 +239,76 @@ async def get_stock_kline(
     return data
 
 
-# --- Fund endpoints ---
+# --- Fund list (snapshot) ---
+
+
+@router.get("/funds/snapshot")
+async def list_fund_snapshot(
+    search: str | None = Query(None, description="Search by symbol or name"),
+    sort_by: str = Query("symbol", description="Sort field: symbol, name, nav, accumulated_nav, daily_return, time"),
+    sort_order: str = Query("asc", description="Sort order: asc or desc"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Get the latest snapshot for each fund, with pagination and sorting."""
+    cache_key = f"fund:snapshot:{search}:{sort_by}:{sort_order}:{page}:{page_size}"
+    cached = await _get_cache(cache_key)
+    if cached is not None:
+        return cached  # type: ignore[no-any-return]
+
+    allowed_sort = {"symbol", "name", "nav", "accumulated_nav", "daily_return", "time"}
+    col = sort_by if sort_by in allowed_sort else "symbol"
+    order = "DESC" if sort_order == "desc" else "ASC"
+    null_pos = "NULLS LAST" if order == "ASC" else "NULLS FIRST"
+
+    search_clause = ""
+    params: dict[str, Any] = {"limit": page_size, "offset": (page - 1) * page_size}
+    if search:
+        search_clause = "AND (s.symbol ILIKE :search OR s.name ILIKE :search)"
+        params["search"] = f"%{search}%"
+
+    query = text(f"""
+        WITH ranked AS (
+            SELECT *,
+                ROW_NUMBER() OVER (
+                    PARTITION BY symbol
+                    ORDER BY (CASE WHEN daily_return IS NOT NULL THEN 0 ELSE 1 END), time DESC
+                ) AS rn
+            FROM fund_nav
+            WHERE name IS NOT NULL AND name <> ''
+        ),
+        latest AS (
+            SELECT * FROM ranked WHERE rn = 1
+        )
+        SELECT *, COUNT(*) OVER() AS total_count
+        FROM latest s
+        WHERE 1=1 {search_clause}
+        ORDER BY {col} {order} {null_pos}
+        LIMIT :limit OFFSET :offset
+    """)
+
+    result = await db.execute(query, params)
+    rows = result.fetchall()
+
+    total = rows[0].total_count if rows else 0
+    items = []
+    for r in rows:
+        items.append({
+            "time": r.time.isoformat(),
+            "symbol": r.symbol,
+            "name": r.name,
+            "nav": float(r.nav),
+            "accumulated_nav": float(r.accumulated_nav) if r.accumulated_nav else None,
+            "daily_return": float(r.daily_return) if r.daily_return else None,
+        })
+
+    data = {"items": items, "total": total, "page": page, "page_size": page_size}
+    await _set_cache(cache_key, data, CACHE_TTL_SNAPSHOT)
+    return data
+
+
+# --- Fund detail endpoints ---
 
 
 @router.get("/funds/{symbol}/nav")
@@ -154,7 +344,78 @@ async def get_fund_nav(
     return data
 
 
-# --- Bond endpoints ---
+# --- Bond list (snapshot) ---
+
+
+@router.get("/bonds/snapshot")
+async def list_bond_snapshot(
+    search: str | None = Query(None, description="Search by symbol or name"),
+    sort_by: str = Query("symbol", description="Sort field: symbol, name, close, change_pct, volume, time"),
+    sort_order: str = Query("asc", description="Sort order: asc or desc"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Get the latest snapshot for each bond, with pagination and sorting."""
+    cache_key = f"bond:snapshot:{search}:{sort_by}:{sort_order}:{page}:{page_size}"
+    cached = await _get_cache(cache_key)
+    if cached is not None:
+        return cached  # type: ignore[no-any-return]
+
+    allowed_sort = {"symbol", "name", "close", "change_pct", "volume", "time"}
+    col = sort_by if sort_by in allowed_sort else "symbol"
+    order = "DESC" if sort_order == "desc" else "ASC"
+    null_pos = "NULLS LAST" if order == "ASC" else "NULLS FIRST"
+
+    search_clause = ""
+    params: dict[str, Any] = {"limit": page_size, "offset": (page - 1) * page_size}
+    if search:
+        search_clause = "AND (s.symbol ILIKE :search OR s.name ILIKE :search)"
+        params["search"] = f"%{search}%"
+
+    query = text(f"""
+        WITH ranked AS (
+            SELECT *,
+                ROW_NUMBER() OVER (
+                    PARTITION BY symbol
+                    ORDER BY (CASE WHEN change_pct IS NOT NULL THEN 0 ELSE 1 END), time DESC
+                ) AS rn
+            FROM bond_daily
+        ),
+        latest AS (
+            SELECT * FROM ranked WHERE rn = 1
+        )
+        SELECT *, COUNT(*) OVER() AS total_count
+        FROM latest s
+        WHERE 1=1 {search_clause}
+        ORDER BY {col} {order} {null_pos}
+        LIMIT :limit OFFSET :offset
+    """)
+
+    result = await db.execute(query, params)
+    rows = result.fetchall()
+
+    total = rows[0].total_count if rows else 0
+    items = []
+    for r in rows:
+        items.append({
+            "time": r.time.isoformat(),
+            "symbol": r.symbol,
+            "name": r.name,
+            "bond_type": r.bond_type,
+            "close": float(r.close),
+            "volume": r.volume,
+            "amount": float(r.amount) if r.amount else None,
+            "ytm": float(r.ytm) if r.ytm else None,
+            "change_pct": float(r.change_pct) if r.change_pct else None,
+        })
+
+    data = {"items": items, "total": total, "page": page, "page_size": page_size}
+    await _set_cache(cache_key, data, CACHE_TTL_SNAPSHOT)
+    return data
+
+
+# --- Bond detail endpoints ---
 
 
 @router.get("/bonds/{symbol}/daily")

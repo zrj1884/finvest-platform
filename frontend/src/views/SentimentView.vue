@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { getNews, type NewsArticle } from '../api/market'
+
+const { t } = useI18n()
 
 const articles = ref<NewsArticle[]>([])
 const loading = ref(false)
@@ -33,12 +36,12 @@ function sentimentColor(score: number | null): string {
 }
 
 function sentimentLabel(score: number | null): string {
-  if (score == null) return 'N/A'
-  if (score > 0.5) return 'Very Bullish'
-  if (score > 0.2) return 'Bullish'
-  if (score < -0.5) return 'Very Bearish'
-  if (score < -0.2) return 'Bearish'
-  return 'Neutral'
+  if (score == null) return t('sentiment.na')
+  if (score > 0.5) return t('sentiment.veryBullish')
+  if (score > 0.2) return t('sentiment.bullish')
+  if (score < -0.5) return t('sentiment.veryBearish')
+  if (score < -0.2) return t('sentiment.bearish')
+  return t('sentiment.neutral')
 }
 
 onMounted(loadData)
@@ -46,27 +49,27 @@ onMounted(loadData)
 
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-gray-900 mb-6">Market Sentiment</h1>
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ t('sentiment.title') }}</h1>
 
     <!-- Summary cards -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <p class="text-xs text-gray-500">Average Sentiment</p>
+        <p class="text-xs text-gray-500">{{ t('sentiment.avgSentiment') }}</p>
         <p class="text-2xl font-mono font-bold" :class="sentimentColor(avgSentiment)">
           {{ avgSentiment.toFixed(2) }}
         </p>
         <p class="text-xs" :class="sentimentColor(avgSentiment)">{{ sentimentLabel(avgSentiment) }}</p>
       </div>
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <p class="text-xs text-gray-500">Bullish Articles</p>
+        <p class="text-xs text-gray-500">{{ t('sentiment.bullishArticles') }}</p>
         <p class="text-2xl font-mono font-bold text-red-600">{{ bullish }}</p>
       </div>
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <p class="text-xs text-gray-500">Bearish Articles</p>
+        <p class="text-xs text-gray-500">{{ t('sentiment.bearishArticles') }}</p>
         <p class="text-2xl font-mono font-bold text-green-600">{{ bearish }}</p>
       </div>
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <p class="text-xs text-gray-500">Neutral / Unscored</p>
+        <p class="text-xs text-gray-500">{{ t('sentiment.neutralUnscored') }}</p>
         <p class="text-2xl font-mono font-bold text-gray-500">
           {{ neutral }} / {{ articles.length - scored.length }}
         </p>
@@ -75,7 +78,7 @@ onMounted(loadData)
 
     <!-- Sentiment distribution bar -->
     <div v-if="scored.length > 0" class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-      <p class="text-sm font-medium text-gray-700 mb-2">Sentiment Distribution</p>
+      <p class="text-sm font-medium text-gray-700 mb-2">{{ t('sentiment.distribution') }}</p>
       <div class="flex h-6 rounded-full overflow-hidden">
         <div
           class="bg-red-500"
@@ -91,16 +94,16 @@ onMounted(loadData)
         ></div>
       </div>
       <div class="flex justify-between text-xs text-gray-500 mt-1">
-        <span>Bullish {{ Math.round((bullish / scored.length) * 100) }}%</span>
-        <span>Neutral {{ Math.round((neutral / scored.length) * 100) }}%</span>
-        <span>Bearish {{ Math.round((bearish / scored.length) * 100) }}%</span>
+        <span>{{ t('sentiment.bullish') }} {{ Math.round((bullish / scored.length) * 100) }}%</span>
+        <span>{{ t('sentiment.neutral') }} {{ Math.round((neutral / scored.length) * 100) }}%</span>
+        <span>{{ t('sentiment.bearish') }} {{ Math.round((bearish / scored.length) * 100) }}%</span>
       </div>
     </div>
 
     <!-- Article list with sentiment scores -->
-    <div v-if="loading" class="text-center py-12 text-gray-500">Loading...</div>
+    <div v-if="loading" class="text-center py-12 text-gray-500">{{ t('common.loading') }}</div>
     <div v-else-if="articles.length === 0" class="text-center py-12 text-gray-500">
-      No news articles available.
+      {{ t('sentiment.noArticles') }}
     </div>
     <div v-else class="space-y-2">
       <div

@@ -47,8 +47,58 @@ export interface NewsArticle {
   sentiment_score: number | null
 }
 
+export interface PaginatedResponse<T> {
+  items: T[]
+  total: number
+  page: number
+  page_size: number
+}
+
 // K-line data: [time, open, close, low, high, volume]
 export type KlineData = [string, number, number, number, number, number]
+
+export interface SymbolItem {
+  symbol: string
+  name: string
+}
+
+export async function searchSymbols(
+  q: string,
+  market = 'a_share',
+  limit = 10,
+): Promise<SymbolItem[]> {
+  const { data } = await api.get('/v1/market/symbols/search', {
+    params: { q, market, limit },
+  })
+  return data
+}
+
+export async function getStockSnapshot(
+  market = 'a_share',
+  page = 1,
+  pageSize = 10,
+  sortBy = 'symbol',
+  sortOrder = 'asc',
+  search?: string,
+): Promise<PaginatedResponse<StockDaily>> {
+  const params: Record<string, string | number> = { market, page, page_size: pageSize, sort_by: sortBy, sort_order: sortOrder }
+  if (search) params.search = search
+  const { data } = await api.get<PaginatedResponse<StockDaily>>('/v1/market/stocks/snapshot', { params })
+  return data
+}
+
+export async function getFundSnapshot(
+  page = 1,
+  pageSize = 10,
+  sortBy = 'symbol',
+  sortOrder = 'asc',
+  search?: string,
+): Promise<PaginatedResponse<FundNav>> {
+  const params: Record<string, string | number> = { page, page_size: pageSize, sort_by: sortBy, sort_order: sortOrder }
+  if (search) params.search = search
+  const { data } = await api.get<PaginatedResponse<FundNav>>('/v1/market/funds/snapshot', { params })
+  return data
+}
 
 export async function getStockDaily(
   symbol: string,
@@ -80,6 +130,19 @@ export async function getFundNav(symbol: string, limit = 100): Promise<FundNav[]
   const { data } = await api.get<FundNav[]>(`/v1/market/funds/${symbol}/nav`, {
     params: { limit },
   })
+  return data
+}
+
+export async function getBondSnapshot(
+  page = 1,
+  pageSize = 10,
+  sortBy = 'symbol',
+  sortOrder = 'asc',
+  search?: string,
+): Promise<PaginatedResponse<BondDaily>> {
+  const params: Record<string, string | number> = { page, page_size: pageSize, sort_by: sortBy, sort_order: sortOrder }
+  if (search) params.search = search
+  const { data } = await api.get<PaginatedResponse<BondDaily>>('/v1/market/bonds/snapshot', { params })
   return data
 }
 

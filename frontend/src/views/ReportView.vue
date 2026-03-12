@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { generateStockReport, type ReportResponse } from '../api/ai'
+
+const { t } = useI18n()
 
 const symbol = ref('')
 const market = ref('a_share')
@@ -9,9 +12,9 @@ const loading = ref(false)
 const error = ref('')
 
 const marketOptions = [
-  { label: 'A-Share', value: 'a_share' },
-  { label: 'US Stock', value: 'us_stock' },
-  { label: 'HK Stock', value: 'hk_stock' },
+  { key: 'market.a_share', value: 'a_share' },
+  { key: 'market.us_stock', value: 'us_stock' },
+  { key: 'market.hk_stock', value: 'hk_stock' },
 ]
 
 async function generate() {
@@ -22,14 +25,13 @@ async function generate() {
   try {
     report.value = await generateStockReport(symbol.value.trim(), market.value)
   } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Failed to generate report. Check LLM API key configuration.'
+    error.value = e instanceof Error ? e.message : t('report.generateFailed')
   } finally {
     loading.value = false
   }
 }
 
 function formatMd(md: string): string {
-  // Simple markdown to HTML: headings, bold, lists, paragraphs
   return md
     .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>')
     .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold mt-6 mb-3">$1</h2>')
@@ -42,7 +44,7 @@ function formatMd(md: string): string {
 
 <template>
   <div>
-    <h1 class="text-2xl font-bold text-gray-900 mb-6">AI Research Reports</h1>
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ t('report.title') }}</h1>
 
     <!-- Generate form -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
@@ -52,14 +54,14 @@ function formatMd(md: string): string {
           class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
         >
           <option v-for="opt in marketOptions" :key="opt.value" :value="opt.value">
-            {{ opt.label }}
+            {{ t(opt.key) }}
           </option>
         </select>
         <input
           v-model="symbol"
           @keyup.enter="generate"
           type="text"
-          placeholder="Enter stock symbol..."
+          :placeholder="t('report.symbolPlaceholder')"
           class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 flex-1"
         />
         <button
@@ -67,18 +69,18 @@ function formatMd(md: string): string {
           :disabled="loading || !symbol.trim()"
           class="bg-blue-600 text-white px-6 py-2 rounded-md text-sm hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {{ loading ? 'Generating...' : 'Generate Report' }}
+          {{ loading ? t('detail.generating') : t('detail.generateReport') }}
         </button>
       </div>
       <p class="text-xs text-gray-500 mt-2">
-        Requires LLM API key (DeepSeek/Qwen/OpenAI) configured in backend .env
+        {{ t('report.apiHint') }}
       </p>
     </div>
 
     <!-- Loading -->
     <div v-if="loading" class="text-center py-12">
       <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      <p class="text-gray-500 mt-4">Analyzing data and generating report...</p>
+      <p class="text-gray-500 mt-4">{{ t('report.analyzingData') }}</p>
     </div>
 
     <!-- Error -->
@@ -91,18 +93,18 @@ function formatMd(md: string): string {
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-bold text-gray-900">{{ report.title }}</h2>
         <div class="text-xs text-gray-400">
-          {{ report.tokens_used }} tokens · ${{ report.cost_usd.toFixed(4) }}
+          {{ report.tokens_used }} {{ t('report.tokens') }} · ${{ report.cost_usd.toFixed(4) }}
         </div>
       </div>
       <div class="prose max-w-none text-gray-700 leading-relaxed" v-html="formatMd(report.content_md)"></div>
       <div class="mt-6 pt-4 border-t border-gray-200 text-xs text-gray-400">
-        Generated at {{ report.generated_at.split('T')[0] }}
+        {{ t('report.generatedAt') }} {{ report.generated_at.split('T')[0] }}
       </div>
     </div>
 
     <!-- Empty state -->
     <div v-if="!loading && !report && !error" class="text-center py-12 text-gray-500">
-      Enter a stock symbol above to generate an AI research report.
+      {{ t('report.emptyHint') }}
     </div>
   </div>
 </template>

@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { placeOrder, type OrderCreateRequest } from '../api/trading'
+import SymbolAutocomplete from './SymbolAutocomplete.vue'
 
 const { t } = useI18n()
 
@@ -25,6 +26,12 @@ const success = ref('')
 
 const isLimit = computed(() => orderType.value === 'limit')
 
+function lotSize(): number {
+  if (props.market === 'bond') return 10
+  if (props.market === 'a_share' || props.market === 'fund') return 100
+  return 1
+}
+
 async function submit() {
   error.value = ''
   success.value = ''
@@ -32,7 +39,20 @@ async function submit() {
     error.value = t('trading.symbolRequired')
     return
   }
+  if (!quantity.value || quantity.value <= 0) {
+    error.value = t('trading.qtyRequired')
+    return
+  }
+  const lot = lotSize()
+  if (side.value === 'buy' && lot > 1 && quantity.value % lot !== 0) {
+    error.value = t('trading.lotSizeError', { lot })
+    return
+  }
   if (isLimit.value && !price.value) {
+    error.value = t('trading.priceRequired')
+    return
+  }
+  if (isLimit.value && price.value && price.value <= 0) {
     error.value = t('trading.priceRequired')
     return
   }
@@ -51,6 +71,9 @@ async function submit() {
     }
     const order = await placeOrder(req)
     success.value = `Order ${order.status}: ${order.side} ${order.filled_quantity || order.quantity} ${order.symbol}`
+    // Reset form after success
+    symbol.value = ''
+    price.value = undefined
     emit('orderPlaced')
   } catch (e: any) {
     error.value = e.response?.data?.detail || t('trading.orderFailed')
@@ -89,11 +112,10 @@ async function submit() {
     <!-- Symbol -->
     <div class="mb-3">
       <label class="block text-xs text-gray-500 mb-1">{{ t('common.symbol') }}</label>
-      <input
+      <SymbolAutocomplete
         v-model="symbol"
-        type="text"
+        :market="market"
         :placeholder="t('trading.symbolPlaceholder')"
-        class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500"
       />
     </div>
 

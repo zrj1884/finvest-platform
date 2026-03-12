@@ -36,6 +36,11 @@ export async function register(data: RegisterRequest): Promise<UserInfo> {
   return resp.data
 }
 
+export async function refreshToken(refresh_token: string): Promise<AuthResponse> {
+  const resp = await api.post<AuthResponse>('/v1/auth/refresh', { refresh_token })
+  return resp.data
+}
+
 export async function getMe(): Promise<UserInfo> {
   const resp = await api.get<UserInfo>('/v1/users/me')
   return resp.data

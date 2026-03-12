@@ -80,8 +80,11 @@ export default {
     limitOrder: '限价',
     submitting: '提交中...',
     symbolRequired: '请输入代码',
+    qtyRequired: '数量必须大于0',
+    lotSizeError: '买入数量必须是 {lot} 的整数倍',
     priceRequired: '限价单需填写价格',
     orderFailed: '下单失败',
+    cancelConfirm: '确认撤销此委托？',
   },
 
   // Orders
@@ -159,8 +162,92 @@ export default {
     news: { subtitle: '资讯', name: '财经新闻', desc: '新浪财经、东方财富、雪球' },
   },
 
+  // Table / Pagination
+  table: {
+    search: '搜索',
+    searchPlaceholder: '代码或名称',
+    pageSize: '每页',
+    items: '条',
+    total: '共 {total} 条',
+    page: '第 {page} / {pages} 页',
+    prev: '上一页',
+    next: '下一页',
+    noData: '暂无数据，数据将在采集后显示。',
+    close: '收盘价',
+    changePct: '涨跌幅',
+    volume: '成交量',
+    date: '日期',
+    nav: '净值',
+    accNav: '累计净值',
+    dailyReturn: '日收益率',
+    bondType: '类型',
+    ytm: '到期收益率',
+  },
+
+  // News
+  news: {
+    title: '财经资讯',
+    relatedNews: '相关资讯',
+    noNews: '暂无相关资讯',
+    noArticles: '暂无资讯',
+    searchPlaceholder: '搜索资讯...',
+    allSources: '全部来源',
+    sinaFinance: '新浪财经',
+    eastMoney: '东方财富',
+    xueqiu: '雪球',
+    sentiment: '情绪',
+  },
+
+  // AI Report
+  report: {
+    title: 'AI 研究报告',
+    symbolPlaceholder: '输入股票代码...',
+    apiHint: '需要在后端 .env 中配置 LLM API 密钥（DeepSeek/Qwen/OpenAI）',
+    analyzingData: '正在分析数据并生成报告...',
+    generateFailed: '生成报告失败，请检查 LLM API 密钥配置',
+    generatedAt: '生成时间',
+    emptyHint: '在上方输入股票代码，生成 AI 研究报告',
+    tokens: 'tokens',
+  },
+
+  // Sentiment
+  sentiment: {
+    title: '市场舆情分析',
+    avgSentiment: '平均情绪',
+    bullishArticles: '看多文章',
+    bearishArticles: '看空文章',
+    neutralUnscored: '中性 / 未评分',
+    distribution: '情绪分布',
+    veryBullish: '强烈看多',
+    bullish: '看多',
+    neutral: '中性',
+    bearish: '看空',
+    veryBearish: '强烈看空',
+    na: '未评分',
+    noArticles: '暂无资讯文章',
+  },
+
+  // Detail pages
+  detail: {
+    open: '开盘价',
+    high: '最高价',
+    low: '最低价',
+    daily: '日线',
+    weekly: '周线',
+    monthly: '月线',
+    aiAnalysis: 'AI 分析',
+    generateReport: '生成研报',
+    generating: '生成中...',
+    analyzingAI: 'AI 分析中...',
+    clickGenerate: '点击「生成研报」获取 AI 智能分析',
+  },
+
   // Charts
   chart: {
     total: '总计',
+    fullscreen: '全屏',
+    exitFullscreen: '退出全屏',
+    noData: '暂无图表数据',
+    loading: '加载图表中...',
   },
 }

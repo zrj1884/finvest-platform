@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { listAccounts, createAccount, resetAccount, type Account } from '../api/trading'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const accounts = ref<Account[]>([])
 const loading = ref(false)
@@ -51,7 +51,8 @@ async function handleReset(id: string) {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('zh-CN')
+  const loc = locale.value === 'zh' ? 'zh-CN' : 'en-US'
+  return new Date(iso).toLocaleDateString(loc)
 }
 
 onMounted(loadAccounts)

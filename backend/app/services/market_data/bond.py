@@ -48,20 +48,38 @@ class BondCollector(BaseCollector):
         name = await self._fetch_name(symbol)
         return self._standardise(raw, symbol, name, start_date, end_date)
 
+    # Well-known bond names (fallback when API unavailable)
+    _BOND_NAMES: dict[str, str] = {
+        "113009": "广汽转债", "113050": "南银转债", "128108": "蓝晓转2",
+        "123045": "中矿转债", "110074": "精测转债", "113014": "林洋转债",
+        "110043": "无锡转债", "128053": "尚荣转债", "123060": "天路转债",
+        "110038": "济川转债", "019733": "24国债09", "019732": "24国债08",
+    }
+
+    @staticmethod
+    def _strip_exchange(symbol: str) -> str:
+        """Strip exchange prefix: 'sh113009' → '113009', 'sz128108' → '128108'."""
+        if len(symbol) > 2 and symbol[:2] in ("sh", "sz"):
+            return symbol[2:]
+        return symbol
+
     async def _fetch_name(self, symbol: str) -> str | None:
-        """Try to fetch bond name via AKShare."""
+        """Try to fetch bond name via AKShare, then fallback to known names."""
         import akshare as ak
 
+        pure = self._strip_exchange(symbol)
         try:
             loop = asyncio.get_running_loop()
             df = await loop.run_in_executor(None, ak.bond_zh_hs_cov_spot)
             if not df.empty:
-                row = df[df["symbol"] == symbol]
-                if not row.empty:
-                    return str(row.iloc[0].get("name", symbol))
+                # Try matching with and without exchange prefix
+                for code in (symbol, pure):
+                    row = df[df["symbol"] == code]
+                    if not row.empty:
+                        return str(row.iloc[0].get("name", symbol))
         except Exception:
             logger.debug("Could not fetch name for bond %s", symbol)
-        return None
+        return self._BOND_NAMES.get(pure)
 
     async def fetch_treasury_yield(self) -> pd.DataFrame:
         """Fetch China treasury yield curve data."""
